@@ -1,0 +1,52 @@
+package server
+
+import (
+	"git.solsynth.dev/hydrogen/messaging/pkg/models"
+	"git.solsynth.dev/hydrogen/messaging/pkg/services"
+	"github.com/gofiber/fiber/v2"
+)
+
+func getMessageHistory(c *fiber.Ctx) error {
+	take := c.QueryInt("take", 0)
+	offset := c.QueryInt("offset", 0)
+	alias := c.Params("channel")
+
+	channel, err := services.GetChannelWithAlias(alias)
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	count := services.CountMessage(channel)
+	messages, err := services.ListMessage(channel, take, offset)
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	return c.JSON(fiber.Map{
+		"count": count,
+		"data":  messages,
+	})
+}
+
+func newTextMessage(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	alias := c.Params("channel")
+
+	var data struct {
+		Content     string              `json:"content" validate:"required"`
+		Attachments []models.Attachment `json:"attachments"`
+	}
+
+	if err := BindAndValidate(c, &data); err != nil {
+		return err
+	}
+
+	var message models.Message
+	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if message, err = services.NewTextMessage(data.Content, member, channel, data.Attachments...); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(message)
+}

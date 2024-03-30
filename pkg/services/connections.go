@@ -22,10 +22,18 @@ func DealCommand(task models.UnifiedCommand, user models.Account) *models.Unifie
 	switch task.Action {
 	case "messages.send.text":
 		var req struct {
-			ChannelID uint   `json:"channel_id"`
-			Content   string `json:"content"`
+			ChannelID   uint                `json:"channel_id"`
+			Content     string              `json:"content"`
+			Attachments []models.Attachment `json:"attachments"`
 		}
+
 		models.FitStruct(task.Payload, &req)
+		if len(req.Content) == 0 {
+			return &models.UnifiedCommand{
+				Action:  "error",
+				Message: "content cannot be empty",
+			}
+		}
 
 		if channel, member, err := GetAvailableChannel(req.ChannelID, user); err != nil {
 			return lo.ToPtr(models.UnifiedCommandFromError(err))

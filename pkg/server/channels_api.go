@@ -8,11 +8,11 @@ import (
 )
 
 func getChannel(c *fiber.Ctx) error {
-	id, _ := c.ParamsInt("channelId", 0)
+	alias := c.Params("channel")
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
-		BaseModel: models.BaseModel{ID: uint(id)},
+		Alias: alias,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}

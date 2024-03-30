@@ -13,9 +13,10 @@ const (
 type Message struct {
 	BaseModel
 
-	Content   string            `json:"content"`
-	Metadata  datatypes.JSONMap `json:"metadata"`
-	Type      MessageType       `json:"type"`
-	ChannelID uint              `json:"channel_id"`
-	SenderID  uint              `json:"sender_id"`
+	Content     string            `json:"content"`
+	Metadata    datatypes.JSONMap `json:"metadata"`
+	Type        MessageType       `json:"type"`
+	Attachments []Attachment      `json:"attachments"`
+	ChannelID   uint              `json:"channel_id"`
+	SenderID    uint              `json:"sender_id"`
 }

@@ -7,10 +7,51 @@ import (
 	"github.com/samber/lo"
 )
 
-func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.ChannelMember, error) {
+func GetChannel(id uint) (models.Channel, error) {
+	var channel models.Channel
+	if err := database.C.Where(models.Channel{
+		BaseModel: models.BaseModel{ID: id},
+	}).First(&channel).Error; err != nil {
+		return channel, err
+	}
+
+	return channel, nil
+}
+
+func GetChannelWithAlias(alias string) (models.Channel, error) {
+	var channel models.Channel
+	if err := database.C.Where(models.Channel{
+		Alias: alias,
+	}).First(&channel).Error; err != nil {
+		return channel, err
+	}
+
+	return channel, nil
+}
+
+func GetAvailableChannelWithAlias(alias string, user models.Account) (models.Channel, models.ChannelMember, error) {
+	var err error
 	var member models.ChannelMember
 	var channel models.Channel
-	if err := database.C.Where("id = ?", id).First(&channel).Error; err != nil {
+	if channel, err = GetChannelWithAlias(alias); err != nil {
+		return channel, member, err
+	}
+
+	if err := database.C.Where(models.ChannelMember{
+		AccountID: user.ID,
+		ChannelID: channel.ID,
+	}).First(&member).Error; err != nil {
+		return channel, member, fmt.Errorf("channel principal not found: %v", err.Error())
+	}
+
+	return channel, member, nil
+}
+
+func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.ChannelMember, error) {
+	var err error
+	var member models.ChannelMember
+	var channel models.Channel
+	if channel, err = GetChannel(id); err != nil {
 		return channel, member, err
 	}
 

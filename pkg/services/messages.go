@@ -5,13 +5,40 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 )
 
-func NewTextMessage(content string, sender models.ChannelMember, channel models.Channel) (models.Message, error) {
-	message := models.Message{
-		Content:   content,
-		Metadata:  nil,
+func CountMessage(channel models.Channel) int64 {
+	var count int64
+	if err := database.C.Where(models.Message{
 		ChannelID: channel.ID,
-		SenderID:  sender.ID,
-		Type:      models.MessageTypeText,
+	}).Model(&models.Message{}).Count(&count).Error; err != nil {
+		return 0
+	} else {
+		return count
+	}
+}
+
+func ListMessage(channel models.Channel, take int, offset int) ([]models.Message, error) {
+	if take > 100 {
+		take = 100
+	}
+
+	var messages []models.Message
+	if err := database.C.Where(models.Message{
+		ChannelID: channel.ID,
+	}).Limit(take).Offset(offset).Find(&messages).Error; err != nil {
+		return messages, err
+	} else {
+		return messages, nil
+	}
+}
+
+func NewTextMessage(content string, sender models.ChannelMember, channel models.Channel, attachments ...models.Attachment) (models.Message, error) {
+	message := models.Message{
+		Content:     content,
+		Metadata:    nil,
+		ChannelID:   channel.ID,
+		SenderID:    sender.ID,
+		Attachments: attachments,
+		Type:        models.MessageTypeText,
 	}
 
 	var members []models.ChannelMember

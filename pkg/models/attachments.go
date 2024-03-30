@@ -27,9 +27,7 @@ type Attachment struct {
 	Type        AttachmentType `json:"type"`
 	ExternalUrl string         `json:"external_url"`
 	Author      Account        `json:"author"`
-	ArticleID   *uint          `json:"article_id"`
-	MomentID    *uint          `json:"moment_id"`
-	CommentID   *uint          `json:"comment_id"`
+	MessageID   *uint          `json:"message_id"`
 	AuthorID    uint           `json:"author_id"`
 }
 
