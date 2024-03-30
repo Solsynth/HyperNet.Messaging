@@ -1,10 +1,28 @@
 package services
 
 import (
+	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"github.com/samber/lo"
 )
+
+func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.ChannelMember, error) {
+	var member models.ChannelMember
+	var channel models.Channel
+	if err := database.C.Where("id = ?", id).First(&channel).Error; err != nil {
+		return channel, member, err
+	}
+
+	if err := database.C.Where(models.ChannelMember{
+		AccountID: user.ID,
+		ChannelID: channel.ID,
+	}).First(&member).Error; err != nil {
+		return channel, member, fmt.Errorf("channel principal not found: %v", err.Error())
+	}
+
+	return channel, member, nil
+}
 
 func ListChannel() ([]models.Channel, error) {
 	var channels []models.Channel
@@ -44,8 +62,9 @@ func ListChannelIsAvailable(user models.Account) ([]models.Channel, error) {
 	return channels, nil
 }
 
-func NewChannel(user models.Account, name, description string) (models.Channel, error) {
+func NewChannel(user models.Account, alias, name, description string) (models.Channel, error) {
 	channel := models.Channel{
+		Alias:       alias,
 		Name:        name,
 		Description: description,
 		AccountID:   user.ID,
@@ -72,7 +91,7 @@ func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
 	return members, nil
 }
 
-func InviteChannelMember(user models.Account, target models.Channel) error {
+func AddChannelMember(user models.Account, target models.Channel) error {
 	member := models.ChannelMember{
 		ChannelID: target.ID,
 		AccountID: user.ID,
@@ -83,7 +102,7 @@ func InviteChannelMember(user models.Account, target models.Channel) error {
 	return err
 }
 
-func KickChannelMember(user models.Account, target models.Channel) error {
+func RemoveChannelMember(user models.Account, target models.Channel) error {
 	var member models.ChannelMember
 
 	if err := database.C.Where(&models.ChannelMember{
@@ -96,7 +115,8 @@ func KickChannelMember(user models.Account, target models.Channel) error {
 	return database.C.Delete(&member).Error
 }
 
-func EditChannel(channel models.Channel, name, description string) (models.Channel, error) {
+func EditChannel(channel models.Channel, alias, name, description string) (models.Channel, error) {
+	channel.Alias = alias
 	channel.Name = name
 	channel.Description = description
 

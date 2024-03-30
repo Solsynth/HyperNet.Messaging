@@ -10,6 +10,7 @@ func RunMigration(source *gorm.DB) error {
 		&models.Account{},
 		&models.Channel{},
 		&models.ChannelMember{},
+		&models.Message{},
 		&models.Attachment{},
 	); err != nil {
 		return err

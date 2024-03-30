@@ -53,11 +53,9 @@ func listAvailableChannel(c *fiber.Ctx) error {
 
 func createChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
-	if user.PowerLevel < 10 {
-		return fiber.NewError(fiber.StatusForbidden, "require power level 10 to create channels")
-	}
 
 	var data struct {
+		Alias       string `json:"alias" validate:"required,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
 	}
@@ -66,7 +64,7 @@ func createChannel(c *fiber.Ctx) error {
 		return err
 	}
 
-	channel, err := services.NewChannel(user, data.Name, data.Description)
+	channel, err := services.NewChannel(user, data.Alias, data.Name, data.Description)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -79,6 +77,7 @@ func editChannel(c *fiber.Ctx) error {
 	id, _ := c.ParamsInt("channelId", 0)
 
 	var data struct {
+		Alias       string `json:"alias" validate:"required,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
 	}
@@ -95,7 +94,7 @@ func editChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	channel, err := services.EditChannel(channel, data.Name, data.Description)
+	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}

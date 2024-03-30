@@ -2,6 +2,7 @@ package server
 
 import (
 	"git.solsynth.dev/hydrogen/messaging/pkg"
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"net/http"
 	"strings"
@@ -86,6 +87,8 @@ func NewServer() {
 			channels.Put("/:channelId", authMiddleware, editChannel)
 			channels.Delete("/:channelId", authMiddleware, deleteChannel)
 		}
+
+		api.Get("/unified", authMiddleware, websocket.New(unifiedGateway))
 	}
 
 	A.Use(favicon.New(favicon.Config{

@@ -44,7 +44,7 @@ func inviteChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if err := services.InviteChannelMember(account, channel); err != nil {
+	if err := services.AddChannelMember(account, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)
@@ -78,7 +78,7 @@ func kickChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if err := services.KickChannelMember(account, channel); err != nil {
+	if err := services.RemoveChannelMember(account, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)
