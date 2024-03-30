@@ -10,14 +10,14 @@ secret = "LtTjzAGFLshwXhN4ZD4nG5KlMv1MWcsvfv03TSZYnT1VhiAnLIZFTnHUwR0XhGgi"
 content = "uploads"
 
 [debug]
-database = true
+database = false
 print_routes = false
 
 [identity]
 client_id = "solarecho"
 client_secret = "Z9k9AFTj^p"
-endpoint = "http://localhost:8444"
-grpc_endpoint = "127.0.0.1:7444"
+endpoint = "https://id.solsynth.dev"
+grpc_endpoint = "id.solsynth.dev:7444"
 
 [mailer]
 name = "Alphabot <alphabot@smartsheep.studio>"
