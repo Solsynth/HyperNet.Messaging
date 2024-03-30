@@ -18,7 +18,7 @@ type Message struct {
 	Type        MessageType       `json:"type"`
 	Attachments []Attachment      `json:"attachments"`
 	Channel     Channel           `json:"channel"`
-	Sender      Account           `json:"sender"`
+	Sender      ChannelMember     `json:"sender"`
 	ChannelID   uint              `json:"channel_id"`
 	SenderID    uint              `json:"sender_id"`
 }

@@ -5,13 +5,13 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/gofiber/contrib/websocket"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/samber/lo"
 )
 
 func unifiedGateway(c *websocket.Conn) {
 	user := c.Locals("principal").(models.Account)
 
 	// Push connection
-	connectionIdx := len(services.WsConn)
 	services.WsConn[user.ID] = append(services.WsConn[user.ID], c)
 
 	// Event loop
@@ -42,8 +42,7 @@ func unifiedGateway(c *websocket.Conn) {
 	}
 
 	// Pop connection
-	services.WsConn[user.ID] = append(
-		services.WsConn[user.ID][:connectionIdx],
-		services.WsConn[user.ID][connectionIdx+1:]...,
-	)
+	services.WsConn[user.ID] = lo.Filter(services.WsConn[user.ID], func(item *websocket.Conn, idx int) bool {
+		return item != c
+	})
 }

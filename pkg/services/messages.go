@@ -28,6 +28,7 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 		}).Limit(take).Offset(offset).
 		Order("created_at DESC").
 		Preload("Sender").
+		Preload("Sender.Account").
 		Find(&messages).Error; err != nil {
 		return messages, err
 	} else {
@@ -37,10 +38,13 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 
 func GetMessage(channel models.Channel, id uint) (models.Message, error) {
 	var message models.Message
-	if err := database.C.Where(models.Message{
-		BaseModel: models.BaseModel{ID: id},
-		ChannelID: channel.ID,
-	}).First(&message).Error; err != nil {
+	if err := database.C.
+		Where(models.Message{
+			BaseModel: models.BaseModel{ID: id},
+			ChannelID: channel.ID,
+		}).Preload("Sender").
+		Preload("Sender.Account").
+		First(&message).Error; err != nil {
 		return message, err
 	} else {
 		return message, nil
@@ -77,7 +81,8 @@ func NewTextMessage(content string, sender models.ChannelMember, channel models.
 		ChannelID: channel.ID,
 	}).Find(&members).Error; err == nil {
 		for _, member := range members {
-			PushCommand(member.ID, models.UnifiedCommand{
+			message, _ = GetMessage(channel, message.ID)
+			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.new",
 				Payload: message,
 			})
@@ -94,8 +99,11 @@ func EditMessage(message models.Message) (models.Message, error) {
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: message.ChannelID,
 	}).Find(&members).Error; err == nil {
+		message, _ = GetMessage(models.Channel{
+			BaseModel: models.BaseModel{ID: message.Channel.ID},
+		}, message.ID)
 		for _, member := range members {
-			PushCommand(member.ID, models.UnifiedCommand{
+			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.update",
 				Payload: message,
 			})
@@ -112,8 +120,11 @@ func DeleteMessage(message models.Message) (models.Message, error) {
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: message.ChannelID,
 	}).Find(&members).Error; err == nil {
+		message, _ = GetMessage(models.Channel{
+			BaseModel: models.BaseModel{ID: message.Channel.ID},
+		}, message.ID)
 		for _, member := range members {
-			PushCommand(member.ID, models.UnifiedCommand{
+			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.burnt",
 				Payload: message,
 			})
