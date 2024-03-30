@@ -77,17 +77,22 @@ func NewServer() {
 		channels := api.Group("/channels").Name("Channels API")
 		{
 			channels.Get("/", listChannel)
+			channels.Get("/:channel", getChannel)
 			channels.Get("/me", authMiddleware, listOwnedChannel)
 			channels.Get("/me/available", authMiddleware, listAvailableChannel)
-			channels.Get("/:channel", getChannel)
-			channels.Get("/:channel/messages", getMessageHistory)
-			channels.Get("/:channelId/members", listChannelMembers)
+
 			channels.Post("/", authMiddleware, createChannel)
-			channels.Post("/:channel/messages", authMiddleware, newTextMessage)
-			channels.Post("/:channelId/invite", authMiddleware, inviteChannel)
-			channels.Post("/:channelId/kick", authMiddleware, kickChannel)
 			channels.Put("/:channelId", authMiddleware, editChannel)
 			channels.Delete("/:channelId", authMiddleware, deleteChannel)
+
+			channels.Get("/:channelId/members", listChannelMembers)
+			channels.Post("/:channelId/invite", authMiddleware, inviteChannel)
+			channels.Post("/:channelId/kick", authMiddleware, kickChannel)
+
+			channels.Get("/:channel/messages", listMessage)
+			channels.Post("/:channel/messages", authMiddleware, newTextMessage)
+			channels.Put("/:channel/messages/:messageId", authMiddleware, editMessage)
+			channels.Delete("/:channel/messages/:messageId", authMiddleware, deleteMessage)
 		}
 
 		api.Get("/unified", authMiddleware, websocket.New(unifiedGateway))

@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func getMessageHistory(c *fiber.Ctx) error {
+func listMessage(c *fiber.Ctx) error {
 	take := c.QueryInt("take", 0)
 	offset := c.QueryInt("offset", 0)
 	alias := c.Params("channel")
@@ -45,6 +45,58 @@ func newTextMessage(c *fiber.Ctx) error {
 	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if message, err = services.NewTextMessage(data.Content, member, channel, data.Attachments...); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(message)
+}
+
+func editMessage(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	alias := c.Params("channel")
+	messageId, _ := c.ParamsInt("messageId", 0)
+
+	var data struct {
+		Content     string              `json:"content" validate:"required"`
+		Attachments []models.Attachment `json:"attachments"`
+	}
+
+	if err := BindAndValidate(c, &data); err != nil {
+		return err
+	}
+
+	var message models.Message
+	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if message, err = services.GetMessageWithPrincipal(channel, member, uint(messageId)); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	message.Content = data.Content
+	message.Attachments = data.Attachments
+
+	message, err := services.EditMessage(message)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(message)
+}
+
+func deleteMessage(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	alias := c.Params("channel")
+	messageId, _ := c.ParamsInt("messageId", 0)
+
+	var message models.Message
+	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if message, err = services.GetMessageWithPrincipal(channel, member, uint(messageId)); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	message, err := services.DeleteMessage(message)
+	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 

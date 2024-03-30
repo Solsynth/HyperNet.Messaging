@@ -22,12 +22,41 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 	}
 
 	var messages []models.Message
-	if err := database.C.Where(models.Message{
-		ChannelID: channel.ID,
-	}).Limit(take).Offset(offset).Find(&messages).Error; err != nil {
+	if err := database.C.
+		Where(models.Message{
+			ChannelID: channel.ID,
+		}).Limit(take).Offset(offset).
+		Order("created_at DESC").
+		Preload("Sender").
+		Find(&messages).Error; err != nil {
 		return messages, err
 	} else {
 		return messages, nil
+	}
+}
+
+func GetMessage(channel models.Channel, id uint) (models.Message, error) {
+	var message models.Message
+	if err := database.C.Where(models.Message{
+		BaseModel: models.BaseModel{ID: id},
+		ChannelID: channel.ID,
+	}).First(&message).Error; err != nil {
+		return message, err
+	} else {
+		return message, nil
+	}
+}
+
+func GetMessageWithPrincipal(channel models.Channel, member models.ChannelMember, id uint) (models.Message, error) {
+	var message models.Message
+	if err := database.C.Where(models.Message{
+		BaseModel: models.BaseModel{ID: id},
+		ChannelID: channel.ID,
+		SenderID:  member.ID,
+	}).First(&message).Error; err != nil {
+		return message, err
+	} else {
+		return message, nil
 	}
 }
 
@@ -50,6 +79,42 @@ func NewTextMessage(content string, sender models.ChannelMember, channel models.
 		for _, member := range members {
 			PushCommand(member.ID, models.UnifiedCommand{
 				Action:  "messages.new",
+				Payload: message,
+			})
+		}
+	}
+
+	return message, nil
+}
+
+func EditMessage(message models.Message) (models.Message, error) {
+	var members []models.ChannelMember
+	if err := database.C.Save(&message).Error; err != nil {
+		return message, err
+	} else if err = database.C.Where(models.ChannelMember{
+		ChannelID: message.ChannelID,
+	}).Find(&members).Error; err == nil {
+		for _, member := range members {
+			PushCommand(member.ID, models.UnifiedCommand{
+				Action:  "messages.update",
+				Payload: message,
+			})
+		}
+	}
+
+	return message, nil
+}
+
+func DeleteMessage(message models.Message) (models.Message, error) {
+	var members []models.ChannelMember
+	if err := database.C.Delete(&message).Error; err != nil {
+		return message, err
+	} else if err = database.C.Where(models.ChannelMember{
+		ChannelID: message.ChannelID,
+	}).Find(&members).Error; err == nil {
+		for _, member := range members {
+			PushCommand(member.ID, models.UnifiedCommand{
+				Action:  "messages.burnt",
 				Payload: message,
 			})
 		}

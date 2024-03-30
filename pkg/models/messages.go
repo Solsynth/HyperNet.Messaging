@@ -17,6 +17,8 @@ type Message struct {
 	Metadata    datatypes.JSONMap `json:"metadata"`
 	Type        MessageType       `json:"type"`
 	Attachments []Attachment      `json:"attachments"`
+	Channel     Channel           `json:"channel"`
+	Sender      Account           `json:"sender"`
 	ChannelID   uint              `json:"channel_id"`
 	SenderID    uint              `json:"sender_id"`
 }

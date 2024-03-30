@@ -3,7 +3,6 @@ package services
 import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"github.com/gofiber/contrib/websocket"
-	"github.com/samber/lo"
 )
 
 var WsConn = make(map[uint][]*websocket.Conn)
@@ -20,28 +19,6 @@ func PushCommand(userId uint, task models.UnifiedCommand) {
 
 func DealCommand(task models.UnifiedCommand, user models.Account) *models.UnifiedCommand {
 	switch task.Action {
-	case "messages.send.text":
-		var req struct {
-			ChannelID   uint                `json:"channel_id"`
-			Content     string              `json:"content"`
-			Attachments []models.Attachment `json:"attachments"`
-		}
-
-		models.FitStruct(task.Payload, &req)
-		if len(req.Content) == 0 {
-			return &models.UnifiedCommand{
-				Action:  "error",
-				Message: "content cannot be empty",
-			}
-		}
-
-		if channel, member, err := GetAvailableChannel(req.ChannelID, user); err != nil {
-			return lo.ToPtr(models.UnifiedCommandFromError(err))
-		} else if _, err = NewTextMessage(req.Content, member, channel); err != nil {
-			return lo.ToPtr(models.UnifiedCommandFromError(err))
-		} else {
-			return nil
-		}
 	default:
 		return &models.UnifiedCommand{
 			Action:  "error",
