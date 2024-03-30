@@ -27,6 +27,7 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 			ChannelID: channel.ID,
 		}).Limit(take).Offset(offset).
 		Order("created_at DESC").
+		Preload("Attachments").
 		Preload("Sender").
 		Preload("Sender.Account").
 		Find(&messages).Error; err != nil {
@@ -42,7 +43,9 @@ func GetMessage(channel models.Channel, id uint) (models.Message, error) {
 		Where(models.Message{
 			BaseModel: models.BaseModel{ID: id},
 			ChannelID: channel.ID,
-		}).Preload("Sender").
+		}).
+		Preload("Attachments").
+		Preload("Sender").
 		Preload("Sender.Account").
 		First(&message).Error; err != nil {
 		return message, err

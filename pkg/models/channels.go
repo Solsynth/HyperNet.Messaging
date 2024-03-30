@@ -16,6 +16,7 @@ type Channel struct {
 	Members     []ChannelMember `json:"members"`
 	Messages    []Message       `json:"messages"`
 	Type        ChannelType     `json:"type"`
+	Account     Account         `json:"account"`
 	AccountID   uint            `json:"account_id"`
 	RealmID     uint            `json:"realm_id"`
 }
