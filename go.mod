@@ -3,7 +3,7 @@ module git.solsynth.dev/hydrogen/messaging
 go 1.21.6
 
 require (
-	git.solsynth.dev/hydrogen/identity v0.0.0-20240320131628-6ac77f36957f
+	git.solsynth.dev/hydrogen/identity v0.0.0-20240331080359-e8aac7bb6627
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/gofiber/template/html/v2 v2.1.1

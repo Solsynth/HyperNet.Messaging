@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NotifyAccount(user models.Account, subject, content string, links ...*proto.NotifyLink) error {
+func NotifyAccount(user models.Account, subject, content string, realtime bool, links ...*proto.NotifyLink) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -21,6 +21,7 @@ func NotifyAccount(user models.Account, subject, content string, links ...*proto
 		Content:      content,
 		Links:        links,
 		RecipientId:  uint64(user.ID),
+		IsRealtime:   realtime,
 		IsImportant:  false,
 	})
 

@@ -75,8 +75,9 @@ func NewMessage(message models.Message) (models.Message, error) {
 		return message, err
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: message.ChannelID,
-	}).Find(&members).Error; err == nil {
+	}).Preload("Account").Find(&members).Error; err == nil {
 		for _, member := range members {
+			_ = NotifyAccount(member.Account, "New message at "+message.Channel.Name, message.Content, true)
 			message, _ = GetMessage(message.Channel, message.ID)
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.new",
