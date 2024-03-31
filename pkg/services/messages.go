@@ -31,7 +31,6 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 		Preload("Attachments").
 		Preload("ReplyTo").
 		Preload("ReplyTo.Sender").
-		Preload("ReplyTo.Sender.Account").
 		Preload("Sender").
 		Preload("Sender.Account").
 		Find(&messages).Error; err != nil {
@@ -50,7 +49,6 @@ func GetMessage(channel models.Channel, id uint) (models.Message, error) {
 		}).
 		Preload("ReplyTo").
 		Preload("ReplyTo.Sender").
-		Preload("ReplyTo.Sender.Account").
 		Preload("Attachments").
 		Preload("Sender").
 		Preload("Sender.Account").
