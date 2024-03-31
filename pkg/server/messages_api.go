@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/gofiber/fiber/v2"
@@ -35,16 +37,40 @@ func newTextMessage(c *fiber.Ctx) error {
 	var data struct {
 		Content     string              `json:"content" validate:"required"`
 		Attachments []models.Attachment `json:"attachments"`
+		ReplyTo     *uint               `json:"reply_to"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
 	}
 
-	var message models.Message
-	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
+	channel, member, err := services.GetAvailableChannelWithAlias(alias, user)
+	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if message, err = services.NewTextMessage(data.Content, member, channel, data.Attachments...); err != nil {
+	}
+
+	message := models.Message{
+		Content:     data.Content,
+		Metadata:    nil,
+		Sender:      member,
+		Channel:     channel,
+		ChannelID:   channel.ID,
+		SenderID:    member.ID,
+		Attachments: data.Attachments,
+		Type:        models.MessageTypeText,
+	}
+
+	var replyTo models.Message
+	if data.ReplyTo != nil {
+		if err := database.C.Where("id = ?", data.ReplyTo).First(&replyTo).Error; err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("message to reply was not found: %v", err))
+		} else {
+			message.ReplyTo = &replyTo
+			message.ReplyID = &replyTo.ID
+		}
+	}
+
+	if message, err = services.NewMessage(message); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 

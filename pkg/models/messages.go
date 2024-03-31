@@ -7,7 +7,6 @@ type MessageType = uint8
 const (
 	MessageTypeText = MessageType(iota)
 	MessageTypeAudio
-	MessageTypeFile
 )
 
 type Message struct {
@@ -19,6 +18,8 @@ type Message struct {
 	Attachments []Attachment      `json:"attachments"`
 	Channel     Channel           `json:"channel"`
 	Sender      ChannelMember     `json:"sender"`
+	ReplyID     *uint             `json:"reply_id"`
+	ReplyTo     *Message          `json:"reply_to" gorm:"foreignKey:ReplyID"`
 	ChannelID   uint              `json:"channel_id"`
 	SenderID    uint              `json:"sender_id"`
 }

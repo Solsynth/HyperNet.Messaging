@@ -28,6 +28,7 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 		}).Limit(take).Offset(offset).
 		Order("created_at DESC").
 		Preload("Attachments").
+		Preload("ReplyTo").
 		Preload("Sender").
 		Preload("Sender.Account").
 		Find(&messages).Error; err != nil {
@@ -44,6 +45,7 @@ func GetMessage(channel models.Channel, id uint) (models.Message, error) {
 			BaseModel: models.BaseModel{ID: id},
 			ChannelID: channel.ID,
 		}).
+		Preload("ReplyTo").
 		Preload("Attachments").
 		Preload("Sender").
 		Preload("Sender.Account").
@@ -67,24 +69,15 @@ func GetMessageWithPrincipal(channel models.Channel, member models.ChannelMember
 	}
 }
 
-func NewTextMessage(content string, sender models.ChannelMember, channel models.Channel, attachments ...models.Attachment) (models.Message, error) {
-	message := models.Message{
-		Content:     content,
-		Metadata:    nil,
-		ChannelID:   channel.ID,
-		SenderID:    sender.ID,
-		Attachments: attachments,
-		Type:        models.MessageTypeText,
-	}
-
+func NewMessage(message models.Message) (models.Message, error) {
 	var members []models.ChannelMember
 	if err := database.C.Save(&message).Error; err != nil {
 		return message, err
 	} else if err = database.C.Where(models.ChannelMember{
-		ChannelID: channel.ID,
+		ChannelID: message.ChannelID,
 	}).Find(&members).Error; err == nil {
 		for _, member := range members {
-			message, _ = GetMessage(channel, message.ID)
+			message, _ = GetMessage(message.Channel, message.ID)
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.new",
 				Payload: message,
