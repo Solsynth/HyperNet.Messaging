@@ -3,6 +3,7 @@ package services
 import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
+	"github.com/rs/zerolog/log"
 )
 
 func CountMessage(channel models.Channel) int64 {
@@ -77,7 +78,11 @@ func NewMessage(message models.Message) (models.Message, error) {
 		ChannelID: message.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
 		for _, member := range members {
-			_ = NotifyAccount(member.Account, "New message at "+message.Channel.Name, message.Content, true)
+			err = NotifyAccount(member.Account, "New message at "+message.Channel.Name, message.Content, true)
+			if err != nil {
+				log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+			}
+
 			message, _ = GetMessage(message.Channel, message.ID)
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.new",
