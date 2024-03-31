@@ -117,19 +117,20 @@ func EditMessage(message models.Message) (models.Message, error) {
 }
 
 func DeleteMessage(message models.Message) (models.Message, error) {
+	prev, _ := GetMessage(models.Channel{
+		BaseModel: models.BaseModel{ID: message.Channel.ID},
+	}, message.ID)
+
 	var members []models.ChannelMember
 	if err := database.C.Delete(&message).Error; err != nil {
 		return message, err
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: message.ChannelID,
 	}).Find(&members).Error; err == nil {
-		message, _ = GetMessage(models.Channel{
-			BaseModel: models.BaseModel{ID: message.Channel.ID},
-		}, message.ID)
 		for _, member := range members {
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.burnt",
-				Payload: message,
+				Payload: prev,
 			})
 		}
 	}
