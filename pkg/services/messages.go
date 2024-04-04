@@ -82,13 +82,11 @@ func NewMessage(message models.Message) (models.Message, error) {
 		ChannelID: message.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
 		for _, member := range members {
-			if member.ID == message.Sender.ID {
-				continue
-			}
-
-			err = NotifyAccount(member.Account, "New message at "+message.Channel.Name, message.Content, true)
-			if err != nil {
-				log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+			if member.ID != message.Sender.ID {
+				err = NotifyAccount(member.Account, "New message at "+message.Channel.Name, message.Content, true)
+				if err != nil {
+					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+				}
 			}
 
 			message, _ = GetMessage(message.Channel, message.ID)
