@@ -83,12 +83,13 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: call.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
+		channel := call.Channel
 		call, _ = GetCall(call.Channel, call.ID)
 		for _, member := range members {
 			if member.ID != call.Founder.ID {
 				if member.Notify == models.NotifyLevelAll {
 					err = NotifyAccount(member.Account,
-						fmt.Sprintf("New Call #%s", call.Channel.Alias),
+						fmt.Sprintf("New Call #%s", channel.Alias),
 						fmt.Sprintf("%s starts a new call", call.Founder.Account.Name),
 						false,
 					)
@@ -128,7 +129,7 @@ func EndCall(call models.Call) (models.Call, error) {
 	return call, nil
 }
 
-func EncodeCallToken(call models.Call, user models.Account) (string, error) {
+func EncodeCallToken(user models.Account) (string, error) {
 	// Jitsi requires HS256 as algorithm, so we cannot use HS512
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"context": jwt.MapClaims{
@@ -140,7 +141,7 @@ func EncodeCallToken(call models.Call, user models.Account) (string, error) {
 		"aud":  viper.GetString("meeting.client_id"),
 		"iss":  viper.GetString("domain"),
 		"sub":  "meet.jitsi",
-		"room": call.ExternalID,
+		"room": "*",
 	})
 
 	return tk.SignedString([]byte(viper.GetString("meeting.client_secret")))

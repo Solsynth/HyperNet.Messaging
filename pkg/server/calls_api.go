@@ -130,7 +130,7 @@ func exchangeCallToken(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	tk, err := services.EncodeCallToken(call, user)
+	tk, err := services.EncodeCallToken(user)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	} else {

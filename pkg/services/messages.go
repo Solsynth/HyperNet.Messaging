@@ -82,13 +82,14 @@ func NewMessage(message models.Message) (models.Message, error) {
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: message.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
+		channel := message.Channel
+		message, _ = GetMessage(message.Channel, message.ID)
 		for _, member := range members {
-			message, _ = GetMessage(message.Channel, message.ID)
 			if member.ID != message.Sender.ID {
 				// TODO Check the mentioned status
 				if member.Notify == models.NotifyLevelAll {
 					err = NotifyAccount(member.Account,
-						fmt.Sprintf("New Message #%s", message.Channel.Alias),
+						fmt.Sprintf("New Message #%s", channel.Alias),
 						fmt.Sprintf("%s: %s", message.Sender.Account.Name, message.Content),
 						true,
 					)
