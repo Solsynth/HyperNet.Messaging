@@ -19,6 +19,11 @@ client_secret = "Z9k9AFTj^p"
 endpoint = "https://id.solsynth.dev"
 grpc_endpoint = "id.solsynth.dev:7444"
 
+[meeting]
+client_id = "solarmeet"
+client_secret = "1234567890"
+endpoint = "https://meet.solsynth.dev"
+
 [mailer]
 name = "Alphabot <alphabot@smartsheep.studio>"
 smtp_host = "smtp.exmail.qq.com"

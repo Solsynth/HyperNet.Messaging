@@ -95,6 +95,12 @@ func NewServer() {
 			channels.Post("/:channel/messages", authMiddleware, newTextMessage)
 			channels.Put("/:channel/messages/:messageId", authMiddleware, editMessage)
 			channels.Delete("/:channel/messages/:messageId", authMiddleware, deleteMessage)
+
+			channels.Get("/:channel/calls", listCall)
+			channels.Get("/:channel/calls/ongoing", getOngoingCall)
+			channels.Post("/:channel/calls", authMiddleware, startCall)
+			channels.Delete("/:channel/calls", authMiddleware, endCall)
+			channels.Post("/:channel/calls/ongoing/token", authMiddleware, exchangeCallToken)
 		}
 
 		api.Get("/unified", authMiddleware, websocket.New(unifiedGateway))

@@ -15,6 +15,7 @@ type Channel struct {
 	Description string          `json:"description"`
 	Members     []ChannelMember `json:"members"`
 	Messages    []Message       `json:"messages"`
+	Calls       []Call          `json:"calls"`
 	Type        ChannelType     `json:"type"`
 	Account     Account         `json:"account"`
 	AccountID   uint            `json:"account_id"`
@@ -38,5 +39,6 @@ type ChannelMember struct {
 	Account   Account     `json:"account"`
 	Notify    NotifyLevel `json:"notify"`
 
+	Calls    []Call    `json:"calls" gorm:"foreignKey:FounderID"`
 	Messages []Message `json:"messages" gorm:"foreignKey:SenderID"`
 }

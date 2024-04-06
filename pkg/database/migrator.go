@@ -9,6 +9,7 @@ var DatabaseAutoActionRange = []any{
 	&models.Account{},
 	&models.Channel{},
 	&models.ChannelMember{},
+	&models.Call{},
 	&models.Message{},
 	&models.Attachment{},
 }
