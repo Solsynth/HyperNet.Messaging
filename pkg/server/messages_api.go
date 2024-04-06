@@ -35,13 +35,15 @@ func newTextMessage(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		Content     string              `json:"content" validate:"required"`
+		Content     string              `json:"content"`
 		Attachments []models.Attachment `json:"attachments"`
 		ReplyTo     *uint               `json:"reply_to"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
+	} else if len(data.Attachments) == 0 && len(data.Content) == 0 {
+		return fmt.Errorf("you must write or upload some content in a single message")
 	}
 
 	channel, member, err := services.GetAvailableChannelWithAlias(alias, user)
