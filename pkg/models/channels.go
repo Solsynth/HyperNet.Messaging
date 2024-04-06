@@ -21,13 +21,22 @@ type Channel struct {
 	RealmID     uint            `json:"realm_id"`
 }
 
+type NotifyLevel = int8
+
+const (
+	NotifyLevelAll = NotifyLevel(iota)
+	NotifyLevelMentioned
+	NotifyLevelNone
+)
+
 type ChannelMember struct {
 	BaseModel
 
-	ChannelID uint    `json:"channel_id"`
-	AccountID uint    `json:"account_id"`
-	Channel   Channel `json:"channel"`
-	Account   Account `json:"account"`
+	ChannelID uint        `json:"channel_id"`
+	AccountID uint        `json:"account_id"`
+	Channel   Channel     `json:"channel"`
+	Account   Account     `json:"account"`
+	Notify    NotifyLevel `json:"notify"`
 
 	Messages []Message `json:"messages" gorm:"foreignKey:SenderID"`
 }

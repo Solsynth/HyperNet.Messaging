@@ -119,56 +119,6 @@ func NewChannel(user models.Account, alias, name, description string) (models.Ch
 	return channel, err
 }
 
-func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
-	var members []models.ChannelMember
-
-	if err := database.C.
-		Where(&models.ChannelMember{ChannelID: channelId}).
-		Preload("Account").
-		Find(&members).Error; err != nil {
-		return members, err
-	}
-
-	return members, nil
-}
-
-func InviteChannelMember(user models.Account, target models.Channel) error {
-	if _, err := GetAccountFriend(user.ID, target.AccountID, 1); err != nil {
-		return fmt.Errorf("you only can invite your friends to your channel")
-	}
-
-	member := models.ChannelMember{
-		ChannelID: target.ID,
-		AccountID: user.ID,
-	}
-
-	err := database.C.Save(&member).Error
-	return err
-}
-
-func AddChannelMember(user models.Account, target models.Channel) error {
-	member := models.ChannelMember{
-		ChannelID: target.ID,
-		AccountID: user.ID,
-	}
-
-	err := database.C.Save(&member).Error
-	return err
-}
-
-func RemoveChannelMember(user models.Account, target models.Channel) error {
-	var member models.ChannelMember
-
-	if err := database.C.Where(&models.ChannelMember{
-		ChannelID: target.ID,
-		AccountID: user.ID,
-	}).First(&member).Error; err != nil {
-		return err
-	}
-
-	return database.C.Delete(&member).Error
-}
-
 func EditChannel(channel models.Channel, alias, name, description string) (models.Channel, error) {
 	channel.Alias = alias
 	channel.Name = name

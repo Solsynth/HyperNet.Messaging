@@ -85,6 +85,35 @@ func kickChannel(c *fiber.Ctx) error {
 	}
 }
 
+func editChannelMembership(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	channelId, _ := c.ParamsInt("channelId", 0)
+
+	var data struct {
+		NotifyLevel int8 `json:"notify_level"`
+	}
+
+	if err := BindAndValidate(c, &data); err != nil {
+		return err
+	}
+
+	var membership models.ChannelMember
+	if err := database.C.Where(&models.ChannelMember{
+		ChannelID: uint(channelId),
+		AccountID: user.ID,
+	}).First(&membership).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	membership.Notify = data.NotifyLevel
+
+	if membership, err := services.EditChannelMember(membership); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else {
+		return c.JSON(membership)
+	}
+}
+
 func leaveChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	channelId, _ := c.ParamsInt("channelId", 0)

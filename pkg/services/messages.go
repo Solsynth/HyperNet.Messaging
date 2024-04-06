@@ -85,13 +85,16 @@ func NewMessage(message models.Message) (models.Message, error) {
 		for _, member := range members {
 			message, _ = GetMessage(message.Channel, message.ID)
 			if member.ID != message.Sender.ID {
-				err = NotifyAccount(member.Account,
-					fmt.Sprintf("New Message #%s", message.Channel.Alias),
-					fmt.Sprintf("%s: %s", message.Sender.Account.Name, message.Content),
-					true,
-				)
-				if err != nil {
-					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+				// TODO Check the mentioned status
+				if member.Notify == models.NotifyLevelAll {
+					err = NotifyAccount(member.Account,
+						fmt.Sprintf("New Message #%s", message.Channel.Alias),
+						fmt.Sprintf("%s: %s", message.Sender.Account.Name, message.Content),
+						true,
+					)
+					if err != nil {
+						log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+					}
 				}
 			}
 			PushCommand(member.AccountID, models.UnifiedCommand{
