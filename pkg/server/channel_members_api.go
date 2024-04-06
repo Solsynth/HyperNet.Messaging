@@ -44,7 +44,7 @@ func inviteChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if err := services.AddChannelMember(account, channel); err != nil {
+	if err := services.InviteChannelMember(account, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)
@@ -79,6 +79,34 @@ func kickChannel(c *fiber.Ctx) error {
 	}
 
 	if err := services.RemoveChannelMember(account, channel); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else {
+		return c.SendStatus(fiber.StatusOK)
+	}
+}
+
+func leaveChannel(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	channelId, _ := c.ParamsInt("channelId", 0)
+
+	var data struct {
+		AccountName string `json:"account_name" validate:"required"`
+	}
+
+	if err := BindAndValidate(c, &data); err != nil {
+		return err
+	}
+
+	var channel models.Channel
+	if err := database.C.Where(&models.Channel{
+		BaseModel: models.BaseModel{ID: uint(channelId)},
+	}).First(&channel).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if user.ID == channel.AccountID {
+		return fiber.NewError(fiber.StatusBadRequest, "you cannot leave your own channel")
+	}
+
+	if err := services.RemoveChannelMember(user, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)

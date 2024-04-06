@@ -88,6 +88,7 @@ func NewServer() {
 			channels.Get("/:channelId/members", listChannelMembers)
 			channels.Post("/:channelId/invite", authMiddleware, inviteChannel)
 			channels.Post("/:channelId/kick", authMiddleware, kickChannel)
+			channels.Post("/:channelId/leave", authMiddleware, leaveChannel)
 
 			channels.Get("/:channel/messages", listMessage)
 			channels.Post("/:channel/messages", authMiddleware, newTextMessage)

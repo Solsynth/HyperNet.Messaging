@@ -132,6 +132,20 @@ func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
 	return members, nil
 }
 
+func InviteChannelMember(user models.Account, target models.Channel) error {
+	if _, err := GetAccountFriend(user.ID, target.AccountID, 1); err != nil {
+		return fmt.Errorf("you only can invite your friends to your channel")
+	}
+
+	member := models.ChannelMember{
+		ChannelID: target.ID,
+		AccountID: user.ID,
+	}
+
+	err := database.C.Save(&member).Error
+	return err
+}
+
 func AddChannelMember(user models.Account, target models.Channel) error {
 	member := models.ChannelMember{
 		ChannelID: target.ID,
@@ -139,7 +153,6 @@ func AddChannelMember(user models.Account, target models.Channel) error {
 	}
 
 	err := database.C.Save(&member).Error
-
 	return err
 }
 
