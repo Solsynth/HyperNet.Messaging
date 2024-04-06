@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"github.com/rs/zerolog/log"
@@ -82,14 +83,17 @@ func NewMessage(message models.Message) (models.Message, error) {
 		ChannelID: message.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
 		for _, member := range members {
+			message, _ = GetMessage(message.Channel, message.ID)
 			if member.ID != message.Sender.ID {
-				err = NotifyAccount(member.Account, "New message at "+message.Channel.Name, message.Content, true)
+				err = NotifyAccount(member.Account,
+					fmt.Sprintf("New Message #%s", message.Channel.Alias),
+					fmt.Sprintf("%s: %s", message.Sender.Account.Name, message.Content),
+					true,
+				)
 				if err != nil {
 					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 				}
 			}
-
-			message, _ = GetMessage(message.Channel, message.ID)
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.new",
 				Payload: message,
