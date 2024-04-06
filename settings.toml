@@ -4,7 +4,7 @@ maintainer = "SmartSheep Studio"
 frontend = "https://lian.solsynth.dev"
 
 bind = "0.0.0.0:8447"
-domain = "feed.smartsheep.studio"
+domain = "im.solsynth.dev"
 secret = "LtTjzAGFLshwXhN4ZD4nG5KlMv1MWcsvfv03TSZYnT1VhiAnLIZFTnHUwR0XhGgi"
 
 content = "uploads"
@@ -20,7 +20,7 @@ endpoint = "https://id.solsynth.dev"
 grpc_endpoint = "id.solsynth.dev:7444"
 
 [meeting]
-client_id = "solarmeet"
+client_id = "solsynth-meeting"
 client_secret = "1234567890"
 endpoint = "https://meet.solsynth.dev"
 

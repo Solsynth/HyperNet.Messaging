@@ -137,7 +137,12 @@ func exchangeCallToken(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"token":    tk,
 			"endpoint": viper.GetString("meeting.endpoint"),
-			"full_url": fmt.Sprintf("%s?jwt=%s", viper.GetString("meeting.endpoint"), url.QueryEscape(tk)),
+			"full_url": fmt.Sprintf(
+				"%s/%s?jwt=%s",
+				viper.GetString("meeting.endpoint"),
+				call.ExternalID,
+				url.QueryEscape(tk),
+			),
 		})
 	}
 }

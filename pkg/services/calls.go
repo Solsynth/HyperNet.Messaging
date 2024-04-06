@@ -129,7 +129,8 @@ func EndCall(call models.Call) (models.Call, error) {
 }
 
 func EncodeCallToken(call models.Call, user models.Account) (string, error) {
-	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+	// Jitsi requires HS256 as algorithm, so we cannot use HS512
+	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"context": jwt.MapClaims{
 			"user": jwt.MapClaims{
 				"avatar": user.Avatar,

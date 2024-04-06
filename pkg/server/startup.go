@@ -99,7 +99,7 @@ func NewServer() {
 			channels.Get("/:channel/calls", listCall)
 			channels.Get("/:channel/calls/ongoing", getOngoingCall)
 			channels.Post("/:channel/calls", authMiddleware, startCall)
-			channels.Delete("/:channel/calls", authMiddleware, endCall)
+			channels.Delete("/:channel/calls/ongoing", authMiddleware, endCall)
 			channels.Post("/:channel/calls/ongoing/token", authMiddleware, exchangeCallToken)
 		}
 
