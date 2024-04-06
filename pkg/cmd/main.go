@@ -1,6 +1,8 @@
 package main
 
 import (
+	"git.solsynth.dev/hydrogen/messaging/pkg/services"
+	"github.com/robfig/cron/v3"
 	"os"
 	"os/signal"
 	"syscall"
@@ -50,6 +52,11 @@ func main() {
 	server.NewServer()
 	go server.Listen()
 
+	// Configure timed tasks
+	quartz := cron.New(cron.WithLogger(cron.VerbosePrintfLogger(&log.Logger)))
+	quartz.AddFunc("@every 60m", services.DoAutoDatabaseCleanup)
+	quartz.Start()
+
 	// Messages
 	log.Info().Msgf("Messaging v%s is started...", messaging.AppVersion)
 
@@ -58,4 +65,6 @@ func main() {
 	<-quit
 
 	log.Info().Msgf("Messaging v%s is quitting...", messaging.AppVersion)
+
+	quartz.Stop()
 }
