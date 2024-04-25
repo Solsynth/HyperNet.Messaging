@@ -1,12 +1,13 @@
 package server
 
 import (
-	"git.solsynth.dev/hydrogen/messaging/pkg"
-	"github.com/gofiber/contrib/websocket"
-	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"net/http"
 	"strings"
 	"time"
+
+	"git.solsynth.dev/hydrogen/messaging/pkg"
+	"github.com/gofiber/contrib/websocket"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
@@ -103,7 +104,7 @@ func NewServer() {
 			channels.Post("/:channel/calls/ongoing/token", authMiddleware, exchangeCallToken)
 		}
 
-		api.Get("/unified", authMiddleware, websocket.New(unifiedGateway))
+		api.Get("/ws", authMiddleware, websocket.New(messageGateway))
 	}
 
 	A.Use(favicon.New(favicon.Config{

@@ -8,7 +8,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func unifiedGateway(c *websocket.Conn) {
+func messageGateway(c *websocket.Conn) {
 	user := c.Locals("principal").(models.Account)
 
 	// Push connection

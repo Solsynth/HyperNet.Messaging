@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"github.com/samber/lo"
@@ -11,7 +12,7 @@ func GetChannel(id uint) (models.Channel, error) {
 	var channel models.Channel
 	if err := database.C.Where(models.Channel{
 		BaseModel: models.BaseModel{ID: id},
-	}).First(&channel).Error; err != nil {
+	}).Preload("Account").First(&channel).Error; err != nil {
 		return channel, err
 	}
 
@@ -22,7 +23,7 @@ func GetChannelWithAlias(alias string) (models.Channel, error) {
 	var channel models.Channel
 	if err := database.C.Where(models.Channel{
 		Alias: alias,
-	}).First(&channel).Error; err != nil {
+	}).Preload("Account").First(&channel).Error; err != nil {
 		return channel, err
 	}
 
@@ -67,7 +68,7 @@ func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.C
 
 func ListChannel() ([]models.Channel, error) {
 	var channels []models.Channel
-	if err := database.C.Find(&channels).Error; err != nil {
+	if err := database.C.Preload("Account").Find(&channels).Error; err != nil {
 		return channels, err
 	}
 

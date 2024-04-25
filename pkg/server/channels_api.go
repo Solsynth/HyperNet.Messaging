@@ -10,10 +10,8 @@ import (
 func getChannel(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
-	var channel models.Channel
-	if err := database.C.Where(&models.Channel{
-		Alias: alias,
-	}).First(&channel).Error; err != nil {
+	channel, err := services.GetChannelWithAlias(alias)
+	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
