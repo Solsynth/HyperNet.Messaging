@@ -1,13 +1,11 @@
 package server
 
 import (
-	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
-	"net/url"
 )
 
 func listCall(c *fiber.Ctx) error {
@@ -137,12 +135,6 @@ func exchangeCallToken(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"token":    tk,
 			"endpoint": viper.GetString("calling.endpoint"),
-			"full_url": fmt.Sprintf(
-				"%s/%s?jwt=%s",
-				viper.GetString("calling.endpoint"),
-				call.ExternalID,
-				url.QueryEscape(tk),
-			),
 		})
 	}
 }
