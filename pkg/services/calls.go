@@ -1,11 +1,14 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
+	"git.solsynth.dev/hydrogen/messaging/pkg/external"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/livekit/protocol/auth"
+	"github.com/livekit/protocol/livekit"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
@@ -65,8 +68,7 @@ func GetOngoingCall(channel models.Channel) (models.Call, error) {
 
 func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call, error) {
 	call := models.Call{
-		Provider:   models.CallProviderJitsi,
-		ExternalID: channel.Name,
+		ExternalID: channel.Alias,
 		FounderID:  founder.ID,
 		ChannelID:  channel.ID,
 		Founder:    founder,
@@ -75,6 +77,15 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 
 	if _, err := GetOngoingCall(channel); err == nil || !errors.Is(err, gorm.ErrRecordNotFound) {
 		return call, fmt.Errorf("this channel already has an ongoing call")
+	}
+
+	_, err := external.Lk.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
+		Name:            call.ExternalID,
+		EmptyTimeout:    viper.GetUint32("calling.empty_timeout_duration"),
+		MaxParticipants: viper.GetUint32("calling.max_participants"),
+	})
+	if err != nil {
+		return call, fmt.Errorf("remote livekit error: %v", err)
 	}
 
 	var members []models.ChannelMember
@@ -111,6 +122,12 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 func EndCall(call models.Call) (models.Call, error) {
 	call.EndedAt = lo.ToPtr(time.Now())
 
+	if _, err := external.Lk.DeleteRoom(context.Background(), &livekit.DeleteRoomRequest{
+		Room: call.ExternalID,
+	}); err != nil {
+		log.Error().Err(err).Msg("Unable to delete room at livekit side")
+	}
+
 	var members []models.ChannelMember
 	if err := database.C.Save(&call).Error; err != nil {
 		return call, err
@@ -129,20 +146,22 @@ func EndCall(call models.Call) (models.Call, error) {
 	return call, nil
 }
 
-func EncodeCallToken(user models.Account) (string, error) {
-	// Jitsi requires HS256 as algorithm, so we cannot use HS512
-	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"context": jwt.MapClaims{
-			"user": jwt.MapClaims{
-				"avatar": user.Avatar,
-				"name":   user.Name,
-			},
-		},
-		"aud":  viper.GetString("meeting.client_id"),
-		"iss":  viper.GetString("domain"),
-		"sub":  "meet.jitsi",
-		"room": "*",
-	})
+func EncodeCallToken(user models.Account, call models.Call) (string, error) {
+	isAdmin := false
+	if user.ID == call.FounderID || user.ID == call.Channel.AccountID {
+		isAdmin = true
+	}
 
-	return tk.SignedString([]byte(viper.GetString("meeting.client_secret")))
+	identity := fmt.Sprintf("%d", user.ID)
+	grant := &auth.VideoGrant{
+		Room:      call.ExternalID,
+		RoomJoin:  true,
+		RoomAdmin: isAdmin,
+	}
+
+	duration := time.Second * time.Duration(viper.GetInt("calling.token_duration"))
+	tk := auth.NewAccessToken(viper.GetString("calling.api_key"), viper.GetString("calling.api_secret"))
+	tk.AddGrant(grant).SetIdentity(identity).SetValidFor(duration)
+
+	return tk.ToJWT()
 }

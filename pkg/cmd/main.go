@@ -1,6 +1,7 @@
 package main
 
 import (
+	"git.solsynth.dev/hydrogen/messaging/pkg/external"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/robfig/cron/v3"
 	"os"
@@ -42,11 +43,10 @@ func main() {
 	}
 
 	// Connect other services
-	go func() {
-		if err := grpc.ConnectPassport(); err != nil {
-			log.Fatal().Err(err).Msg("An error occurred when connecting to identity grpc endpoint...")
-		}
-	}()
+	external.SetupLiveKit()
+	if err := grpc.ConnectPassport(); err != nil {
+		log.Fatal().Err(err).Msg("An error occurred when connecting to identity grpc endpoint...")
+	}
 
 	// Server
 	server.NewServer()

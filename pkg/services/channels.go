@@ -2,11 +2,19 @@ package services
 
 import (
 	"fmt"
+	"regexp"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"github.com/samber/lo"
 )
+
+func GetChannelAliasAvailability(alias string) error {
+	if !regexp.MustCompile("^[a-z0-9-]+$").MatchString(alias) {
+		return fmt.Errorf("channel alias should only contains lowercase letters, numbers, and hyphens")
+	}
+	return nil
+}
 
 func GetChannel(id uint) (models.Channel, error) {
 	var channel models.Channel

@@ -19,10 +19,13 @@ client_secret = "Z9k9AFTj^p"
 endpoint = "https://id.solsynth.dev"
 grpc_endpoint = "id.solsynth.dev:7444"
 
-[meeting]
-client_id = "solsynth-meeting"
-client_secret = "1234567890"
-endpoint = "https://meet.solsynth.dev"
+[calling]
+api_key = "APIZwKRLAWaWa8d"
+api_secret = "wdu3fnKDwlsIW17tLhlRKpx275kPJGwRKMC7JADNaXU"
+endpoint = "hydrogen-kcvgdwpe.livekit.cloud"
+token_duration = 43200
+empty_timeout_duration = 600
+max_participants = 20
 
 [mailer]
 name = "Alphabot <alphabot@smartsheep.studio>"

@@ -53,13 +53,15 @@ func createChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 
 	var data struct {
-		Alias       string `json:"alias" validate:"required,min=4,max=32"`
+		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
+	} else if err = services.GetChannelAliasAvailability(data.Alias); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	channel, err := services.NewChannel(user, data.Alias, data.Name, data.Description)

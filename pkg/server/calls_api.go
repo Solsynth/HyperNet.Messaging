@@ -136,10 +136,10 @@ func exchangeCallToken(c *fiber.Ctx) error {
 	} else {
 		return c.JSON(fiber.Map{
 			"token":    tk,
-			"endpoint": viper.GetString("meeting.endpoint"),
+			"endpoint": viper.GetString("calling.endpoint"),
 			"full_url": fmt.Sprintf(
 				"%s/%s?jwt=%s",
-				viper.GetString("meeting.endpoint"),
+				viper.GetString("calling.endpoint"),
 				call.ExternalID,
 				url.QueryEscape(tk),
 			),
