@@ -8,9 +8,14 @@ import (
 )
 
 func listChannelMembers(c *fiber.Ctx) error {
-	channelId, _ := c.ParamsInt("channelId", 0)
+	alias := c.Params("channel")
 
-	if members, err := services.ListChannelMember(uint(channelId)); err != nil {
+	channel, err := services.GetChannelWithAlias(alias)
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if members, err := services.ListChannelMember(channel.ID); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	} else {
 		return c.JSON(members)
@@ -19,7 +24,7 @@ func listChannelMembers(c *fiber.Ctx) error {
 
 func inviteChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
-	channelId, _ := c.ParamsInt("channelId", 0)
+	alias := c.Params("channel")
 
 	var data struct {
 		AccountName string `json:"account_name" validate:"required"`
@@ -31,7 +36,7 @@ func inviteChannel(c *fiber.Ctx) error {
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
-		BaseModel: models.BaseModel{ID: uint(channelId)},
+		Alias:     alias,
 		AccountID: user.ID,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
@@ -53,7 +58,7 @@ func inviteChannel(c *fiber.Ctx) error {
 
 func kickChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
-	channelId, _ := c.ParamsInt("channelId", 0)
+	alias := c.Params("channel")
 
 	var data struct {
 		AccountName string `json:"account_name" validate:"required"`
@@ -65,7 +70,7 @@ func kickChannel(c *fiber.Ctx) error {
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
-		BaseModel: models.BaseModel{ID: uint(channelId)},
+		Alias:     alias,
 		AccountID: user.ID,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
@@ -87,7 +92,7 @@ func kickChannel(c *fiber.Ctx) error {
 
 func editChannelMembership(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
-	channelId, _ := c.ParamsInt("channelId", 0)
+	alias := c.Params("channel")
 
 	var data struct {
 		NotifyLevel int8 `json:"notify_level"`
@@ -97,9 +102,14 @@ func editChannelMembership(c *fiber.Ctx) error {
 		return err
 	}
 
+	channel, err := services.GetChannelWithAlias(alias)
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
 	var membership models.ChannelMember
 	if err := database.C.Where(&models.ChannelMember{
-		ChannelID: uint(channelId),
+		ChannelID: channel.ID,
 		AccountID: user.ID,
 	}).First(&membership).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
@@ -116,7 +126,7 @@ func editChannelMembership(c *fiber.Ctx) error {
 
 func leaveChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
-	channelId, _ := c.ParamsInt("channelId", 0)
+	alias := c.Params("channel")
 
 	var data struct {
 		AccountName string `json:"account_name" validate:"required"`
@@ -128,7 +138,7 @@ func leaveChannel(c *fiber.Ctx) error {
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
-		BaseModel: models.BaseModel{ID: uint(channelId)},
+		Alias: alias,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if user.ID == channel.AccountID {
