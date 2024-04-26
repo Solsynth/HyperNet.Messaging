@@ -128,14 +128,6 @@ func leaveChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	alias := c.Params("channel")
 
-	var data struct {
-		AccountName string `json:"account_name" validate:"required"`
-	}
-
-	if err := BindAndValidate(c, &data); err != nil {
-		return err
-	}
-
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
 		Alias: alias,
