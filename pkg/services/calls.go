@@ -7,6 +7,7 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/external"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
 	"github.com/rs/zerolog/log"
@@ -158,9 +159,15 @@ func EncodeCallToken(user models.Account, call models.Call) (string, error) {
 		RoomAdmin: isAdmin,
 	}
 
+	metadata, _ := jsoniter.Marshal(user)
+
 	duration := time.Second * time.Duration(viper.GetInt("calling.token_duration"))
 	tk := auth.NewAccessToken(viper.GetString("calling.api_key"), viper.GetString("calling.api_secret"))
-	tk.AddGrant(grant).SetIdentity(user.Name).SetValidFor(duration)
+	tk.AddGrant(grant).
+		SetIdentity(user.Name).
+		SetName(user.Nick).
+		SetMetadata(string(metadata)).
+		SetValidFor(duration)
 
 	return tk.ToJWT()
 }
