@@ -152,7 +152,6 @@ func EncodeCallToken(user models.Account, call models.Call) (string, error) {
 		isAdmin = true
 	}
 
-	identity := fmt.Sprintf("%d", user.ID)
 	grant := &auth.VideoGrant{
 		Room:      call.ExternalID,
 		RoomJoin:  true,
@@ -161,7 +160,7 @@ func EncodeCallToken(user models.Account, call models.Call) (string, error) {
 
 	duration := time.Second * time.Duration(viper.GetInt("calling.token_duration"))
 	tk := auth.NewAccessToken(viper.GetString("calling.api_key"), viper.GetString("calling.api_secret"))
-	tk.AddGrant(grant).SetIdentity(identity).SetValidFor(duration)
+	tk.AddGrant(grant).SetIdentity(user.Name).SetValidFor(duration)
 
 	return tk.ToJWT()
 }
