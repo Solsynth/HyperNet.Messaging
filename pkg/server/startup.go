@@ -75,7 +75,7 @@ func NewServer() {
 		api.Post("/attachments", authMiddleware, uploadAttachment)
 		api.Delete("/attachments/:id", authMiddleware, deleteAttachment)
 
-		channels := api.Group("/channels").Name("Channels API")
+		channels := api.Group("/channels/:realm").Use(realmMiddleware).Name("Channels API")
 		{
 			channels.Get("/", listChannel)
 			channels.Get("/:channel", getChannel)

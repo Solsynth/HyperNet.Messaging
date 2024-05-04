@@ -27,11 +27,15 @@ func GetChannel(id uint) (models.Channel, error) {
 	return channel, nil
 }
 
-func GetChannelWithAlias(alias string) (models.Channel, error) {
+func GetChannelWithAlias(alias string, realmId ...uint) (models.Channel, error) {
 	var channel models.Channel
-	if err := database.C.Where(models.Channel{
-		Alias: alias,
-	}).Preload("Account").First(&channel).Error; err != nil {
+	tx := database.C.Where(models.Channel{Alias: alias}).Preload("Account")
+	if len(realmId) > 0 {
+		tx = tx.Where("realm_id = ?", realmId)
+	} else {
+		tx = tx.Where("realm_id IS NULL")
+	}
+	if err := tx.First(&channel).Error; err != nil {
 		return channel, err
 	}
 
@@ -74,9 +78,15 @@ func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.C
 	return channel, member, nil
 }
 
-func ListChannel() ([]models.Channel, error) {
+func ListChannel(realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
-	if err := database.C.Preload("Account").Find(&channels).Error; err != nil {
+	tx := database.C.Preload("Account")
+	if len(realmId) > 0 {
+		tx = tx.Where("realm_id = ?", realmId)
+	} else {
+		tx = tx.Where("realm_id IS NULL")
+	}
+	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
 	}
 
@@ -112,7 +122,7 @@ func ListChannelIsAvailable(user models.Account) ([]models.Channel, error) {
 	return channels, nil
 }
 
-func NewChannel(user models.Account, alias, name, description string) (models.Channel, error) {
+func NewChannel(user models.Account, alias, name, description string, realmId ...uint) (models.Channel, error) {
 	channel := models.Channel{
 		Alias:       alias,
 		Name:        name,
@@ -121,6 +131,9 @@ func NewChannel(user models.Account, alias, name, description string) (models.Ch
 		Members: []models.ChannelMember{
 			{AccountID: user.ID},
 		},
+	}
+	if len(realmId) > 0 {
+		channel.RealmID = &realmId[0]
 	}
 
 	err := database.C.Save(&channel).Error

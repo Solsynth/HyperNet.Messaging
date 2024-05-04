@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
@@ -10,7 +11,13 @@ import (
 func getChannel(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
-	channel, err := services.GetChannelWithAlias(alias)
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
@@ -19,7 +26,13 @@ func getChannel(c *fiber.Ctx) error {
 }
 
 func listChannel(c *fiber.Ctx) error {
-	channels, err := services.ListChannel()
+	var err error
+	var channels []models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channels, err = services.ListChannel(val.ID)
+	} else {
+		channels, err = services.ListChannel()
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -64,7 +77,25 @@ func createChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	channel, err := services.NewChannel(user, data.Alias, data.Name, data.Description)
+	var realm *models.Realm
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		if info, err := services.GetRealmMember(val.ID, user.ExternalID); err != nil {
+			return fmt.Errorf("you must be a part of that realm then can create channel related to it")
+		} else if info.GetPowerLevel() < 50 {
+			return fmt.Errorf("you must be a moderator of that realm then can create channel related to it")
+		} else {
+			realm = &val
+		}
+	}
+
+	var err error
+	var channel models.Channel
+	if realm != nil {
+		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description, realm.ID)
+	} else {
+		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description)
+	}
+
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -86,11 +117,22 @@ func editChannel(c *fiber.Ctx) error {
 		return err
 	}
 
+	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
+
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		if info, err := services.GetRealmMember(val.ID, user.ExternalID); err != nil {
+			return fmt.Errorf("you must be a part of that realm then can edit channel related to it")
+		} else if info.GetPowerLevel() < 50 {
+			return fmt.Errorf("you must be a moderator of that realm then can edit channel related to it")
+		} else {
+			tx = tx.Where("realm_id = ?", val.ID)
+		}
+	} else {
+		tx = tx.Where("account_id = ? AND realm_id IS NULL", user.ID)
+	}
+
 	var channel models.Channel
-	if err := database.C.Where(&models.Channel{
-		BaseModel: models.BaseModel{ID: uint(id)},
-		AccountID: user.ID,
-	}).First(&channel).Error; err != nil {
+	if err := tx.First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
@@ -106,11 +148,22 @@ func deleteChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
+	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
+
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		if info, err := services.GetRealmMember(val.ID, user.ExternalID); err != nil {
+			return fmt.Errorf("you must be a part of that realm then can delete channel related to it")
+		} else if info.GetPowerLevel() < 50 {
+			return fmt.Errorf("you must be a moderator of that realm then can delete channel related to it")
+		} else {
+			tx = tx.Where("realm_id = ?", val.ID)
+		}
+	} else {
+		tx = tx.Where("account_id = ? AND realm_id IS NULL", user.ID)
+	}
+
 	var channel models.Channel
-	if err := database.C.Where(&models.Channel{
-		BaseModel: models.BaseModel{ID: uint(id)},
-		AccountID: user.ID,
-	}).First(&channel).Error; err != nil {
+	if err := tx.First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
