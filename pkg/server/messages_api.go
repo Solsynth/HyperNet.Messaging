@@ -9,6 +9,7 @@ import (
 )
 
 func listMessage(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
 	take := c.QueryInt("take", 0)
 	offset := c.QueryInt("offset", 0)
 	alias := c.Params("channel")
@@ -16,6 +17,8 @@ func listMessage(c *fiber.Ctx) error {
 	channel, err := services.GetChannelWithAlias(alias)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err != nil {
+		return fiber.NewError(fiber.StatusForbidden, fmt.Sprintf("you need join the channel before you read the messages: %v", err))
 	}
 
 	count := services.CountMessage(channel)
@@ -30,7 +33,7 @@ func listMessage(c *fiber.Ctx) error {
 	})
 }
 
-func newTextMessage(c *fiber.Ctx) error {
+func newMessage(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	alias := c.Params("channel")
 

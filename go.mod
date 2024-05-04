@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.1
 
 require (
-	git.solsynth.dev/hydrogen/identity v0.0.0-20240406034845-44d2ec9c4ace
+	git.solsynth.dev/hydrogen/passport v0.0.0-20240504085931-7c418a3cd32f
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.52.4
@@ -59,7 +59,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jxskiss/base62 v1.1.0 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/lithammer/shortuuid/v4 v4.0.0 // indirect

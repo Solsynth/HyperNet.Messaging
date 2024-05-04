@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
@@ -22,7 +23,7 @@ func listChannelMembers(c *fiber.Ctx) error {
 	}
 }
 
-func inviteChannel(c *fiber.Ctx) error {
+func addChannelMember(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	alias := c.Params("channel")
 
@@ -49,14 +50,14 @@ func inviteChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if err := services.InviteChannelMember(account, channel); err != nil {
+	if err := services.AddChannelMemberWithCheck(account, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)
 	}
 }
 
-func kickChannel(c *fiber.Ctx) error {
+func removeChannelMember(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	alias := c.Params("channel")
 
@@ -121,6 +122,34 @@ func editChannelMembership(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.JSON(membership)
+	}
+}
+
+func joinChannel(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	alias := c.Params("channel")
+
+	var channel models.Channel
+	if err := database.C.Where(&models.Channel{
+		Alias: alias,
+	}).First(&channel).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err == nil {
+		return fiber.NewError(fiber.StatusBadRequest, "you already joined the channel")
+	} else if channel.RealmID == nil {
+		return fiber.NewError(fiber.StatusBadRequest, "you was impossible to join a channel without related realm")
+	}
+
+	if realm, err := services.GetRealm(channel.ID); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
+	} else if _, err := services.GetRealmMember(realm.ID, user.ExternalID); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
+	}
+
+	if err := services.AddChannelMember(user, channel); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else {
+		return c.SendStatus(fiber.StatusOK)
 	}
 }
 

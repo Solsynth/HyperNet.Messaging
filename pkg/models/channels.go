@@ -10,7 +10,7 @@ const (
 type Channel struct {
 	BaseModel
 
-	Alias       string          `json:"alias" gorm:"uniqueIndex"`
+	Alias       string          `json:"alias"`
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
 	Members     []ChannelMember `json:"members"`
@@ -19,7 +19,7 @@ type Channel struct {
 	Type        ChannelType     `json:"type"`
 	Account     Account         `json:"account"`
 	AccountID   uint            `json:"account_id"`
-	RealmID     uint            `json:"realm_id"`
+	RealmID     *uint           `json:"realm_id"`
 }
 
 type NotifyLevel = int8

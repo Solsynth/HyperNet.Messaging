@@ -88,12 +88,13 @@ func NewServer() {
 
 			channels.Get("/:channel/members", listChannelMembers)
 			channels.Put("/:channel/members", authMiddleware, editChannelMembership)
-			channels.Post("/:channel/invite", authMiddleware, inviteChannel)
-			channels.Post("/:channel/kick", authMiddleware, kickChannel)
-			channels.Post("/:channel/leave", authMiddleware, leaveChannel)
+			channels.Post("/:channel/members", authMiddleware, addChannelMember)
+			channels.Post("/:channel/members/me", authMiddleware, joinChannel)
+			channels.Delete("/:channel/members", authMiddleware, removeChannelMember)
+			channels.Delete("/:channel/members/me", authMiddleware, leaveChannel)
 
-			channels.Get("/:channel/messages", listMessage)
-			channels.Post("/:channel/messages", authMiddleware, newTextMessage)
+			channels.Get("/:channel/messages", authMiddleware, listMessage)
+			channels.Post("/:channel/messages", authMiddleware, newMessage)
 			channels.Put("/:channel/messages/:messageId", authMiddleware, editMessage)
 			channels.Delete("/:channel/messages/:messageId", authMiddleware, deleteMessage)
 

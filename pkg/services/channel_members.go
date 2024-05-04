@@ -19,7 +19,7 @@ func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
 	return members, nil
 }
 
-func InviteChannelMember(user models.Account, target models.Channel) error {
+func AddChannelMemberWithCheck(user models.Account, target models.Channel) error {
 	if _, err := GetAccountFriend(user.ID, target.AccountID, 1); err != nil {
 		return fmt.Errorf("you only can invite your friends to your channel")
 	}
