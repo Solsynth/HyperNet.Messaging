@@ -55,9 +55,19 @@ func newMessage(c *fiber.Ctx) error {
 		return fmt.Errorf("you must write or upload some content in a single message")
 	}
 
-	channel, member, err := services.GetAvailableChannelWithAlias(alias, user)
-	if err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	var err error
+	var channel models.Channel
+	var member models.ChannelMember
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	} else {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
 	}
 
 	message := models.Message{
@@ -102,17 +112,30 @@ func editMessage(c *fiber.Ctx) error {
 		return err
 	}
 
+	var err error
+	var channel models.Channel
+	var member models.ChannelMember
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	} else {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	}
+
 	var message models.Message
-	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if message, err = services.GetMessageWithPrincipal(channel, member, uint(messageId)); err != nil {
+	if message, err = services.GetMessageWithPrincipal(channel, member, uint(messageId)); err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
 	message.Content = data.Content
 	message.Attachments = data.Attachments
 
-	message, err := services.EditMessage(message)
+	message, err = services.EditMessage(message)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -125,14 +148,27 @@ func deleteMessage(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 
+	var err error
+	var channel models.Channel
+	var member models.ChannelMember
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	} else {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	}
+
 	var message models.Message
-	if channel, member, err := services.GetAvailableChannelWithAlias(alias, user); err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if message, err = services.GetMessageWithPrincipal(channel, member, uint(messageId)); err != nil {
+	if message, err = services.GetMessageWithPrincipal(channel, member, uint(messageId)); err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	message, err := services.DeleteMessage(message)
+	message, err = services.DeleteMessage(message)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}

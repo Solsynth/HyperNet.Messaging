@@ -42,11 +42,11 @@ func GetChannelWithAlias(alias string, realmId ...uint) (models.Channel, error) 
 	return channel, nil
 }
 
-func GetAvailableChannelWithAlias(alias string, user models.Account) (models.Channel, models.ChannelMember, error) {
+func GetAvailableChannelWithAlias(alias string, user models.Account, realmId ...uint) (models.Channel, models.ChannelMember, error) {
 	var err error
 	var member models.ChannelMember
 	var channel models.Channel
-	if channel, err = GetChannelWithAlias(alias); err != nil {
+	if channel, err = GetChannelWithAlias(alias, realmId...); err != nil {
 		return channel, member, err
 	}
 
@@ -93,16 +93,22 @@ func ListChannel(realmId ...uint) ([]models.Channel, error) {
 	return channels, nil
 }
 
-func ListChannelWithUser(user models.Account) ([]models.Channel, error) {
+func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
-	if err := database.C.Where(&models.Channel{AccountID: user.ID}).Find(&channels).Error; err != nil {
+	tx := database.C.Where(&models.Channel{AccountID: user.ID})
+	if len(realmId) > 0 {
+		tx = tx.Where("realm_id = ?", realmId)
+	} else {
+		tx = tx.Where("realm_id IS NULL")
+	}
+	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
 	}
 
 	return channels, nil
 }
 
-func ListChannelIsAvailable(user models.Account) ([]models.Channel, error) {
+func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
 	var members []models.ChannelMember
 	if err := database.C.Where(&models.ChannelMember{
@@ -115,7 +121,13 @@ func ListChannelIsAvailable(user models.Account) ([]models.Channel, error) {
 		return item.ChannelID
 	})
 
-	if err := database.C.Where("id IN ?", idx).Find(&channels).Error; err != nil {
+	tx := database.C.Where("id IN ?", idx)
+	if len(realmId) > 0 {
+		tx = tx.Where("realm_id = ?", realmId)
+	} else {
+		tx = tx.Where("realm_id IS NULL")
+	}
+	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
 	}
 

@@ -43,7 +43,13 @@ func listChannel(c *fiber.Ctx) error {
 func listOwnedChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 
-	channels, err := services.ListChannelWithUser(user)
+	var err error
+	var channels []models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channels, err = services.ListChannelWithUser(user, val.ID)
+	} else {
+		channels, err = services.ListChannelWithUser(user)
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -54,7 +60,13 @@ func listOwnedChannel(c *fiber.Ctx) error {
 func listAvailableChannel(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 
-	channels, err := services.ListChannelIsAvailable(user)
+	var err error
+	var channels []models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channels, err = services.ListAvailableChannel(user, val.ID)
+	} else {
+		channels, err = services.ListAvailableChannel(user)
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
