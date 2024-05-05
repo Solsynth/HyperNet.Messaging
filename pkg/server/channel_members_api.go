@@ -28,7 +28,7 @@ func addChannelMember(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		AccountName string `json:"account_name" validate:"required"`
+		Target string `json:"target" validate:"required"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
@@ -45,7 +45,7 @@ func addChannelMember(c *fiber.Ctx) error {
 
 	var account models.Account
 	if err := database.C.Where(&models.Account{
-		Name: data.AccountName,
+		Name: data.Target,
 	}).First(&account).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
@@ -62,7 +62,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		AccountName string `json:"account_name" validate:"required"`
+		Target string `json:"target" validate:"required"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
@@ -79,7 +79,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 
 	var account models.Account
 	if err := database.C.Where(&models.Account{
-		Name: data.AccountName,
+		Name: data.Target,
 	}).First(&account).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
