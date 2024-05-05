@@ -14,7 +14,13 @@ func listMessage(c *fiber.Ctx) error {
 	offset := c.QueryInt("offset", 0)
 	alias := c.Params("channel")
 
-	channel, err := services.GetChannelWithAlias(alias)
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err != nil {
