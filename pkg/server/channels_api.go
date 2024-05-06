@@ -37,7 +37,7 @@ func getChannelAvailability(c *fiber.Ctx) error {
 		channel, _, err = services.GetAvailableChannelWithAlias(alias, user)
 	}
 	if err != nil {
-		return fiber.NewError(fiber.StatusForbidden, err.Error())
+		return c.Status(fiber.StatusForbidden).JSON(channel)
 	}
 
 	return c.JSON(channel)
