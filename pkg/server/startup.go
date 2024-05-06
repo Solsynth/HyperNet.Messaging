@@ -79,6 +79,7 @@ func NewServer() {
 		{
 			channels.Get("/", listChannel)
 			channels.Get("/:channel", getChannel)
+			channels.Get("/:channel/available", authMiddleware, getChannelAvailability)
 			channels.Get("/me", authMiddleware, listOwnedChannel)
 			channels.Get("/me/available", authMiddleware, listAvailableChannel)
 

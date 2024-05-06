@@ -25,6 +25,24 @@ func getChannel(c *fiber.Ctx) error {
 	return c.JSON(channel)
 }
 
+func getChannelAvailability(c *fiber.Ctx) error {
+	user := c.Locals("principal").(models.Account)
+	alias := c.Params("channel")
+
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, _, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+	} else {
+		channel, _, err = services.GetAvailableChannelWithAlias(alias, user)
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusForbidden, err.Error())
+	}
+
+	return c.JSON(channel)
+}
+
 func listChannel(c *fiber.Ctx) error {
 	var err error
 	var channels []models.Channel
