@@ -19,7 +19,9 @@ type Channel struct {
 	Type        ChannelType     `json:"type"`
 	Account     Account         `json:"account"`
 	AccountID   uint            `json:"account_id"`
-	RealmID     *uint           `json:"realm_id"`
+
+	Realm   Realm `json:"realm"`
+	RealmID *uint `json:"realm_id"`
 }
 
 type NotifyLevel = int8

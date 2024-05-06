@@ -132,7 +132,7 @@ func joinChannel(c *fiber.Ctx) error {
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
 		Alias: alias,
-	}).First(&channel).Error; err != nil {
+	}).Preload("Realm").First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err == nil {
 		return fiber.NewError(fiber.StatusBadRequest, "you already joined the channel")
@@ -140,9 +140,9 @@ func joinChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "you was impossible to join a channel without related realm")
 	}
 
-	if realm, err := services.GetRealm(channel.ID); err != nil {
+	if realm, err := services.GetRealm(channel.Realm.ExternalID); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
-	} else if _, err := services.GetRealmMember(realm.ID, user.ExternalID); err != nil {
+	} else if _, err := services.GetRealmMember(realm.ExternalID, user.ExternalID); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
 	}
 
