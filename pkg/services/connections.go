@@ -5,14 +5,24 @@ import (
 	"github.com/gofiber/contrib/websocket"
 )
 
-var WsConn = make(map[uint][]*websocket.Conn)
+var wsConn = make(map[uint]map[*websocket.Conn]bool)
 
-func CheckOnline(user models.Account) bool {
-	return len(WsConn[user.ID]) > 0
+func ClientRegister(user models.Account, conn *websocket.Conn) {
+	if wsConn[user.ID] == nil {
+		wsConn[user.ID] = make(map[*websocket.Conn]bool)
+	}
+	wsConn[user.ID][conn] = true
+}
+
+func ClientUnregister(user models.Account, conn *websocket.Conn) {
+	if wsConn[user.ID] == nil {
+		wsConn[user.ID] = make(map[*websocket.Conn]bool)
+	}
+	delete(wsConn[user.ID], conn)
 }
 
 func PushCommand(userId uint, task models.UnifiedCommand) {
-	for _, conn := range WsConn[userId] {
+	for conn := range wsConn[userId] {
 		_ = conn.WriteMessage(1, task.Marshal())
 	}
 }
