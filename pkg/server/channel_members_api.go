@@ -11,7 +11,13 @@ import (
 func listChannelMembers(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
-	channel, err := services.GetChannelWithAlias(alias)
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
