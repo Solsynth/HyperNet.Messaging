@@ -1,6 +1,8 @@
 package server
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
@@ -44,7 +46,9 @@ func newMessage(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		Content     string              `json:"content"`
+		Type        string              `json:"type" validate:"required"`
+		Content     map[string]any      `json:"content"`
+		Metadata    map[string]any      `json:"metadata"`
 		Attachments []models.Attachment `json:"attachments"`
 		ReplyTo     *uint               `json:"reply_to"`
 	}
@@ -70,15 +74,24 @@ func newMessage(c *fiber.Ctx) error {
 		}
 	}
 
+	var encodedContent []byte
+	if raw, err := json.Marshal(data.Content); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid message content, unable to encode: %v", err))
+	} else {
+		encoder := base64.StdEncoding
+		encodedContent = make([]byte, encoder.EncodedLen(len(raw)))
+		encoder.Encode(encodedContent, raw)
+	}
+
 	message := models.Message{
-		Content:     data.Content,
-		Metadata:    nil,
+		Content:     encodedContent,
 		Sender:      member,
 		Channel:     channel,
 		ChannelID:   channel.ID,
 		SenderID:    member.ID,
+		Metadata:    data.Metadata,
 		Attachments: data.Attachments,
-		Type:        models.MessageTypeText,
+		Type:        data.Type,
 	}
 
 	var replyTo models.Message
@@ -104,8 +117,11 @@ func editMessage(c *fiber.Ctx) error {
 	messageId, _ := c.ParamsInt("messageId", 0)
 
 	var data struct {
-		Content     string              `json:"content" validate:"required"`
+		Type        string              `json:"type" validate:"required"`
+		Content     map[string]any      `json:"content"`
+		Metadata    map[string]any      `json:"metadata"`
 		Attachments []models.Attachment `json:"attachments"`
+		ReplyTo     *uint               `json:"reply_to"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
@@ -132,8 +148,19 @@ func editMessage(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	message.Content = data.Content
+	var encodedContent []byte
+	if raw, err := json.Marshal(data.Content); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid message content, unable to encode: %v", err))
+	} else {
+		encoder := base64.StdEncoding
+		encodedContent = make([]byte, encoder.EncodedLen(len(raw)))
+		encoder.Encode(encodedContent, raw)
+	}
+
 	message.Attachments = data.Attachments
+	message.Metadata = data.Metadata
+	message.Content = encodedContent
+	message.Type = data.Type
 
 	message, err = services.EditMessage(message)
 	if err != nil {

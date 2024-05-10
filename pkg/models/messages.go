@@ -2,19 +2,12 @@ package models
 
 import "gorm.io/datatypes"
 
-type MessageType = uint8
-
-const (
-	MessageTypeText = MessageType(iota)
-	MessageTypeAudio
-)
-
 type Message struct {
 	BaseModel
 
-	Content     string            `json:"content"`
+	Content     []byte            `json:"content"`
 	Metadata    datatypes.JSONMap `json:"metadata"`
-	Type        MessageType       `json:"type"`
+	Type        string            `json:"type"`
 	Attachments []Attachment      `json:"attachments"`
 	Channel     Channel           `json:"channel"`
 	Sender      ChannelMember     `json:"sender"`
