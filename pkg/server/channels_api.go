@@ -99,6 +99,7 @@ func createChannel(c *fiber.Ctx) error {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
+		IsEncrypted bool   `json:"is_encrypted"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
@@ -121,9 +122,9 @@ func createChannel(c *fiber.Ctx) error {
 	var err error
 	var channel models.Channel
 	if realm != nil {
-		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description, realm.ID)
+		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description, data.IsEncrypted, realm.ID)
 	} else {
-		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description)
+		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description, data.IsEncrypted)
 	}
 
 	if err != nil {
@@ -141,6 +142,7 @@ func editChannel(c *fiber.Ctx) error {
 		Alias       string `json:"alias" validate:"required,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
+		IsEncrypted bool   `json:"is_encrypted"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
@@ -166,7 +168,7 @@ func editChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description)
+	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description, data.IsEncrypted)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}

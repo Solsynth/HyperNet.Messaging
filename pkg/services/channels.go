@@ -134,11 +134,12 @@ func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channe
 	return channels, nil
 }
 
-func NewChannel(user models.Account, alias, name, description string, realmId ...uint) (models.Channel, error) {
+func NewChannel(user models.Account, alias, name, description string, isEncrypted bool, realmId ...uint) (models.Channel, error) {
 	channel := models.Channel{
 		Alias:       alias,
 		Name:        name,
 		Description: description,
+		IsEncrypted: isEncrypted,
 		AccountID:   user.ID,
 		Members: []models.ChannelMember{
 			{AccountID: user.ID},
@@ -153,10 +154,13 @@ func NewChannel(user models.Account, alias, name, description string, realmId ..
 	return channel, err
 }
 
-func EditChannel(channel models.Channel, alias, name, description string) (models.Channel, error) {
+func EditChannel(channel models.Channel, alias, name, description string, isEncrypted bool) (models.Channel, error) {
 	channel.Alias = alias
 	channel.Name = name
 	channel.Description = description
+	if !channel.IsEncrypted {
+		channel.IsEncrypted = isEncrypted
+	}
 
 	err := database.C.Save(&channel).Error
 

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
@@ -48,7 +47,6 @@ func newMessage(c *fiber.Ctx) error {
 	var data struct {
 		Type        string              `json:"type" validate:"required"`
 		Content     map[string]any      `json:"content"`
-		Metadata    map[string]any      `json:"metadata"`
 		Attachments []models.Attachment `json:"attachments"`
 		ReplyTo     *uint               `json:"reply_to"`
 	}
@@ -74,22 +72,17 @@ func newMessage(c *fiber.Ctx) error {
 		}
 	}
 
-	var encodedContent []byte
-	if raw, err := json.Marshal(data.Content); err != nil {
+	rawContent, err := json.Marshal(data.Content)
+	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid message content, unable to encode: %v", err))
-	} else {
-		encoder := base64.StdEncoding
-		encodedContent = make([]byte, encoder.EncodedLen(len(raw)))
-		encoder.Encode(encodedContent, raw)
 	}
 
 	message := models.Message{
-		Content:     encodedContent,
+		Content:     rawContent,
 		Sender:      member,
 		Channel:     channel,
 		ChannelID:   channel.ID,
 		SenderID:    member.ID,
-		Metadata:    data.Metadata,
 		Attachments: data.Attachments,
 		Type:        data.Type,
 	}
@@ -119,7 +112,6 @@ func editMessage(c *fiber.Ctx) error {
 	var data struct {
 		Type        string              `json:"type" validate:"required"`
 		Content     map[string]any      `json:"content"`
-		Metadata    map[string]any      `json:"metadata"`
 		Attachments []models.Attachment `json:"attachments"`
 		ReplyTo     *uint               `json:"reply_to"`
 	}
@@ -148,18 +140,13 @@ func editMessage(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	var encodedContent []byte
-	if raw, err := json.Marshal(data.Content); err != nil {
+	rawContent, err := json.Marshal(data.Content)
+	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid message content, unable to encode: %v", err))
-	} else {
-		encoder := base64.StdEncoding
-		encodedContent = make([]byte, encoder.EncodedLen(len(raw)))
-		encoder.Encode(encodedContent, raw)
 	}
 
 	message.Attachments = data.Attachments
-	message.Metadata = data.Metadata
-	message.Content = encodedContent
+	message.Content = rawContent
 	message.Type = data.Type
 
 	message, err = services.EditMessage(message)
