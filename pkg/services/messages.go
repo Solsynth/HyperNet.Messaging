@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
+	"github.com/gofiber/fiber/v2"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -76,6 +78,9 @@ func GetMessageWithPrincipal(channel models.Channel, member models.ChannelMember
 }
 
 func NewMessage(message models.Message) (models.Message, error) {
+	var decodedContent fiber.Map
+	_ = jsoniter.Unmarshal(message.Content, &decodedContent)
+
 	var members []models.ChannelMember
 	if err := database.C.Save(&message).Error; err != nil {
 		return message, err
@@ -88,9 +93,13 @@ func NewMessage(message models.Message) (models.Message, error) {
 			if member.ID != message.Sender.ID {
 				// TODO Check the mentioned status
 				if member.Notify == models.NotifyLevelAll {
+					displayText := "*encrypted message*"
+					if decodedContent["algorithm"] == "plain" {
+						displayText, _ = decodedContent["value"].(string)
+					}
 					err = NotifyAccount(member.Account,
 						fmt.Sprintf("New Message #%s", channel.Alias),
-						fmt.Sprintf("%s: %s", message.Sender.Account.Name, message.Content),
+						fmt.Sprintf("%s: %s", message.Sender.Account.Name, displayText),
 						true,
 					)
 					if err != nil {
