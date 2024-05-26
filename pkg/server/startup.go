@@ -3,14 +3,12 @@ package server
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/idempotency"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -68,22 +66,16 @@ func NewServer() {
 		api.Get("/users/me", authMiddleware, getUserinfo)
 		api.Get("/users/:accountId", getOthersInfo)
 
-		api.Get("/attachments/o/:fileId", cache.New(cache.Config{
-			Expiration:   365 * 24 * time.Hour,
-			CacheControl: true,
-		}), readAttachment)
-		api.Post("/attachments", authMiddleware, uploadAttachment)
-		api.Delete("/attachments/:id", authMiddleware, deleteAttachment)
-
 		channels := api.Group("/channels/:realm").Use(realmMiddleware).Name("Channels API")
 		{
 			channels.Get("/", listChannel)
-			channels.Get("/:channel", getChannel)
-			channels.Get("/:channel/availability", authMiddleware, getChannelAvailability)
 			channels.Get("/me", authMiddleware, listOwnedChannel)
 			channels.Get("/me/available", authMiddleware, listAvailableChannel)
+			channels.Get("/:channel", getChannel)
+			channels.Get("/:channel/availability", authMiddleware, getChannelAvailability)
 
 			channels.Post("/", authMiddleware, createChannel)
+			channels.Post("/dm", authMiddleware, createDirectChannel)
 			channels.Put("/:channelId", authMiddleware, editChannel)
 			channels.Delete("/:channelId", authMiddleware, deleteChannel)
 

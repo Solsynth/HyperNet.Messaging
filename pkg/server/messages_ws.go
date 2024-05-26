@@ -5,6 +5,7 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/gofiber/contrib/websocket"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/rs/zerolog/log"
 )
 
 func messageGateway(c *websocket.Conn) {
@@ -12,6 +13,7 @@ func messageGateway(c *websocket.Conn) {
 
 	// Push connection
 	services.ClientRegister(user, c)
+	log.Debug().Uint("user", user.ID).Msg("New websocket connection established...")
 
 	// Event loop
 	var task models.UnifiedCommand
@@ -42,4 +44,5 @@ func messageGateway(c *websocket.Conn) {
 
 	// Pop connection
 	services.ClientUnregister(user, c)
+	log.Debug().Uint("user", user.ID).Msg("A websocket connection disconnected...")
 }

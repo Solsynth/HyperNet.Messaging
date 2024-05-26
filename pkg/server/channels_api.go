@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
@@ -111,22 +112,31 @@ func createChannel(c *fiber.Ctx) error {
 	var realm *models.Realm
 	if val, ok := c.Locals("realm").(models.Realm); ok {
 		if info, err := services.GetRealmMember(val.ExternalID, user.ExternalID); err != nil {
-			return fmt.Errorf("you must be a part of that realm then can create channel related to it")
+			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can create channel related to it")
 		} else if info.GetPowerLevel() < 50 {
-			return fmt.Errorf("you must be a moderator of that realm then can create channel related to it")
+			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can create channel related to it")
 		} else {
 			realm = &val
 		}
 	}
 
-	var err error
-	var channel models.Channel
-	if realm != nil {
-		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description, data.IsEncrypted, realm.ID)
-	} else {
-		channel, err = services.NewChannel(user, data.Alias, data.Name, data.Description, data.IsEncrypted)
+	channel := models.Channel{
+		Alias:       data.Alias,
+		Name:        data.Name,
+		Description: data.Description,
+		IsEncrypted: data.IsEncrypted,
+		AccountID:   user.ID,
+		Type:        models.ChannelTypeCommon,
+		Members: []models.ChannelMember{
+			{AccountID: user.ID, PowerLevel: 100},
+		},
 	}
 
+	if realm != nil {
+		channel.RealmID = &realm.ID
+	}
+
+	channel, err := services.NewChannel(channel)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -153,19 +163,27 @@ func editChannel(c *fiber.Ctx) error {
 
 	if val, ok := c.Locals("realm").(models.Realm); ok {
 		if info, err := services.GetRealmMember(val.ExternalID, user.ExternalID); err != nil {
-			return fmt.Errorf("you must be a part of that realm then can edit channel related to it")
+			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can edit channel related to it")
 		} else if info.GetPowerLevel() < 50 {
-			return fmt.Errorf("you must be a moderator of that realm then can edit channel related to it")
+			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can edit channel related to it")
 		} else {
 			tx = tx.Where("realm_id = ?", val.ID)
 		}
 	} else {
-		tx = tx.Where("account_id = ? AND realm_id IS NULL", user.ID)
+		tx = tx.Where("realm_id IS NULL")
 	}
 
 	var channel models.Channel
 	if err := tx.First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if channel.RealmID != nil {
+		if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+			return fiber.NewError(fiber.StatusForbidden, "you must be a part of this channel to edit it")
+		} else if member.PowerLevel < 100 {
+			return fiber.NewError(fiber.StatusForbidden, "you must be channel admin to edit it")
+		}
 	}
 
 	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description, data.IsEncrypted)

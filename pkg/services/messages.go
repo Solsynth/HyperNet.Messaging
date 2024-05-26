@@ -2,11 +2,11 @@ package services
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
-	"github.com/gofiber/fiber/v2"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 )
 
 func CountMessage(channel models.Channel) int64 {
@@ -31,7 +31,6 @@ func ListMessage(channel models.Channel, take int, offset int) ([]models.Message
 			ChannelID: channel.ID,
 		}).Limit(take).Offset(offset).
 		Order("created_at DESC").
-		Preload("Attachments").
 		Preload("ReplyTo").
 		Preload("ReplyTo.Sender").
 		Preload("ReplyTo.Sender.Account").
@@ -54,7 +53,6 @@ func GetMessage(channel models.Channel, id uint) (models.Message, error) {
 		Preload("ReplyTo").
 		Preload("ReplyTo.Sender").
 		Preload("ReplyTo.Sender.Account").
-		Preload("Attachments").
 		Preload("Sender").
 		Preload("Sender.Account").
 		First(&message).Error; err != nil {
@@ -78,9 +76,6 @@ func GetMessageWithPrincipal(channel models.Channel, member models.ChannelMember
 }
 
 func NewMessage(message models.Message) (models.Message, error) {
-	var decodedContent fiber.Map
-	_ = jsoniter.Unmarshal(message.Content, &decodedContent)
-
 	var members []models.ChannelMember
 	if err := database.C.Save(&message).Error; err != nil {
 		return message, err
@@ -91,20 +86,39 @@ func NewMessage(message models.Message) (models.Message, error) {
 		message, _ = GetMessage(message.Channel, message.ID)
 		for _, member := range members {
 			if member.ID != message.Sender.ID {
-				// TODO Check the mentioned status
-				if member.Notify == models.NotifyLevelAll {
-					displayText := "*encrypted message*"
-					if decodedContent["algorithm"] == "plain" {
-						displayText, _ = decodedContent["value"].(string)
+				switch member.Notify {
+				case models.NotifyLevelNone:
+					continue
+				case models.NotifyLevelMentioned:
+					if val, ok := message.Content["metioned_users"]; ok {
+						if usernames, ok := val.([]string); ok {
+							if lo.Contains(usernames, member.Account.Name) {
+								break
+							}
+						}
 					}
-					err = NotifyAccount(member.Account,
-						fmt.Sprintf("New Message #%s", channel.Alias),
-						fmt.Sprintf("%s: %s", message.Sender.Account.Name, displayText),
-						true,
-					)
-					if err != nil {
-						log.Warn().Err(err).Msg("An error occurred when trying notify user.")
-					}
+
+					continue
+				}
+
+				var displayText string
+				if message.Content["algorithm"] == "plain" {
+					displayText, _ = message.Content["value"].(string)
+				} else {
+					displayText = "*encrypted message*"
+				}
+
+				if len(displayText) == 0 {
+					displayText = fmt.Sprintf("%d attachment(s)", len(message.Attachments))
+				}
+
+				err = NotifyAccount(member.Account,
+					fmt.Sprintf("New Message #%s", channel.Alias),
+					fmt.Sprintf("%s: %s", message.Sender.Account.Name, displayText),
+					true,
+				)
+				if err != nil {
+					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 				}
 			}
 			PushCommand(member.AccountID, models.UnifiedCommand{

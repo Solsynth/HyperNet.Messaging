@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
@@ -43,10 +44,13 @@ func addChannelMember(c *fiber.Ctx) error {
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
-		Alias:     alias,
-		AccountID: user.ID,
+		Alias: alias,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+		return fiber.NewError(fiber.StatusForbidden, err.Error())
+	} else if member.PowerLevel < 50 {
+		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to add member into it")
 	}
 
 	var account models.Account
@@ -81,6 +85,10 @@ func removeChannelMember(c *fiber.Ctx) error {
 		AccountID: user.ID,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+		return fiber.NewError(fiber.StatusForbidden, err.Error())
+	} else if member.PowerLevel < 50 {
+		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member into it")
 	}
 
 	var account models.Account

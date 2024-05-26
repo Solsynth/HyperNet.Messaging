@@ -80,11 +80,9 @@ func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.C
 
 func ListChannel(realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
-	tx := database.C.Preload("Account")
+	tx := database.C.Preload("Account").Preload("Realm")
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
-	} else {
-		tx = tx.Where("realm_id IS NULL")
 	}
 	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
@@ -95,7 +93,7 @@ func ListChannel(realmId ...uint) ([]models.Channel, error) {
 
 func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
-	tx := database.C.Where(&models.Channel{AccountID: user.ID})
+	tx := database.C.Where(&models.Channel{AccountID: user.ID}).Preload("Realm")
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	} else {
@@ -121,7 +119,7 @@ func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channe
 		return item.ChannelID
 	})
 
-	tx := database.C.Where("id IN ?", idx)
+	tx := database.C.Preload("Realm").Where("id IN ?", idx)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	} else {
@@ -134,23 +132,8 @@ func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channe
 	return channels, nil
 }
 
-func NewChannel(user models.Account, alias, name, description string, isEncrypted bool, realmId ...uint) (models.Channel, error) {
-	channel := models.Channel{
-		Alias:       alias,
-		Name:        name,
-		Description: description,
-		IsEncrypted: isEncrypted,
-		AccountID:   user.ID,
-		Members: []models.ChannelMember{
-			{AccountID: user.ID},
-		},
-	}
-	if len(realmId) > 0 {
-		channel.RealmID = &realmId[0]
-	}
-
+func NewChannel(channel models.Channel) (models.Channel, error) {
 	err := database.C.Save(&channel).Error
-
 	return channel, err
 }
 

@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 )
@@ -17,6 +18,18 @@ func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
 	}
 
 	return members, nil
+}
+
+func GetChannelMember(user models.Account, channelId uint) (models.ChannelMember, error) {
+	var member models.ChannelMember
+
+	if err := database.C.
+		Where(&models.ChannelMember{AccountID: user.ID, ChannelID: channelId}).
+		Find(&member).Error; err != nil {
+		return member, err
+	}
+
+	return member, nil
 }
 
 func AddChannelMemberWithCheck(user models.Account, target models.Channel) error {

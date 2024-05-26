@@ -1,8 +1,8 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
@@ -45,16 +45,25 @@ func newMessage(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		Type        string              `json:"type" validate:"required"`
-		Content     map[string]any      `json:"content"`
-		Attachments []models.Attachment `json:"attachments"`
-		ReplyTo     *uint               `json:"reply_to"`
+		Uuid        string         `json:"uuid" validate:"required"`
+		Type        string         `json:"type" validate:"required"`
+		Content     map[string]any `json:"content"`
+		Attachments []uint         `json:"attachments"`
+		ReplyTo     *uint          `json:"reply_to"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
 	} else if len(data.Attachments) == 0 && len(data.Content) == 0 {
-		return fmt.Errorf("you must write or upload some content in a single message")
+		return fiber.NewError(fiber.StatusBadRequest, "you must write or upload some content in a single message")
+	} else if len(data.Uuid) < 36 {
+		return fiber.NewError(fiber.StatusBadRequest, "message uuid was not valid")
+	}
+
+	for _, attachment := range data.Attachments {
+		if !services.CheckAttachmentByIDExists(attachment, "m.attachment") {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("attachment %d not found", attachment))
+		}
 	}
 
 	var err error
@@ -72,13 +81,9 @@ func newMessage(c *fiber.Ctx) error {
 		}
 	}
 
-	rawContent, err := json.Marshal(data.Content)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid message content, unable to encode: %v", err))
-	}
-
 	message := models.Message{
-		Content:     rawContent,
+		Uuid:        data.Uuid,
+		Content:     data.Content,
 		Sender:      member,
 		Channel:     channel,
 		ChannelID:   channel.ID,
@@ -110,14 +115,20 @@ func editMessage(c *fiber.Ctx) error {
 	messageId, _ := c.ParamsInt("messageId", 0)
 
 	var data struct {
-		Type        string              `json:"type" validate:"required"`
-		Content     map[string]any      `json:"content"`
-		Attachments []models.Attachment `json:"attachments"`
-		ReplyTo     *uint               `json:"reply_to"`
+		Type        string         `json:"type" validate:"required"`
+		Content     map[string]any `json:"content"`
+		Attachments []uint         `json:"attachments"`
+		ReplyTo     *uint          `json:"reply_to"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
+	}
+
+	for _, attachment := range data.Attachments {
+		if !services.CheckAttachmentByIDExists(attachment, "m.attachment") {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("attachment %d not found", attachment))
+		}
 	}
 
 	var err error
@@ -140,13 +151,8 @@ func editMessage(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	rawContent, err := json.Marshal(data.Content)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("invalid message content, unable to encode: %v", err))
-	}
-
 	message.Attachments = data.Attachments
-	message.Content = rawContent
+	message.Content = data.Content
 	message.Type = data.Type
 
 	message, err = services.EditMessage(message)

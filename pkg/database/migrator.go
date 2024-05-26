@@ -12,7 +12,6 @@ var DatabaseAutoActionRange = []any{
 	&models.ChannelMember{},
 	&models.Call{},
 	&models.Message{},
-	&models.Attachment{},
 }
 
 func RunMigration(source *gorm.DB) error {

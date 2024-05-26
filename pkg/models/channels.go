@@ -3,8 +3,8 @@ package models
 type ChannelType = uint8
 
 const (
-	ChannelTypeDirect = ChannelType(iota)
-	ChannelTypeRealm
+	ChannelTypeCommon = ChannelType(iota)
+	ChannelTypeDirect
 )
 
 type Channel struct {
@@ -36,11 +36,12 @@ const (
 type ChannelMember struct {
 	BaseModel
 
-	ChannelID uint        `json:"channel_id"`
-	AccountID uint        `json:"account_id"`
-	Channel   Channel     `json:"channel"`
-	Account   Account     `json:"account"`
-	Notify    NotifyLevel `json:"notify"`
+	ChannelID  uint        `json:"channel_id"`
+	AccountID  uint        `json:"account_id"`
+	Channel    Channel     `json:"channel"`
+	Account    Account     `json:"account"`
+	Notify     NotifyLevel `json:"notify"`
+	PowerLevel int         `json:"power_level"`
 
 	Calls    []Call    `json:"calls" gorm:"foreignKey:FounderID"`
 	Messages []Message `json:"messages" gorm:"foreignKey:SenderID"`
