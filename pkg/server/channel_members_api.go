@@ -47,7 +47,11 @@ func addChannelMember(c *fiber.Ctx) error {
 		Alias: alias,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+	} else if channel.Type == models.ChannelTypeDirect {
+		return fiber.NewError(fiber.StatusBadRequest, "direct message member changes was not allowed")
+	}
+
+	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
 		return fiber.NewError(fiber.StatusForbidden, err.Error())
 	} else if member.PowerLevel < 50 {
 		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to add member into it")
@@ -85,7 +89,11 @@ func removeChannelMember(c *fiber.Ctx) error {
 		AccountID: user.ID,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+	} else if channel.Type == models.ChannelTypeDirect {
+		return fiber.NewError(fiber.StatusBadRequest, "direct message member changes was not allowed")
+	}
+
+	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
 		return fiber.NewError(fiber.StatusForbidden, err.Error())
 	} else if member.PowerLevel < 50 {
 		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member into it")

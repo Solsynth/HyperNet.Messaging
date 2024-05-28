@@ -1,11 +1,12 @@
 package server
 
 import (
+	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/gofiber/fiber/v2"
-	"github.com/samber/lo"
 )
 
 func createDirectChannel(c *fiber.Ctx) error {
@@ -15,7 +16,7 @@ func createDirectChannel(c *fiber.Ctx) error {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
-		Members     []uint `json:"members"`
+		RelatedUser uint   `json:"related_user"`
 		IsEncrypted bool   `json:"is_encrypted"`
 	}
 
@@ -36,9 +37,9 @@ func createDirectChannel(c *fiber.Ctx) error {
 		}
 	}
 
-	var members []models.Account
-	if err := database.C.Where("id IN ?", data.Members).Find(&members).Error; err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	var relatedUser models.Account
+	if err := database.C.Where("id = ?", data.RelatedUser).First(&relatedUser).Error; err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unable to find related user: %v", err))
 	}
 
 	channel := models.Channel{
@@ -48,11 +49,10 @@ func createDirectChannel(c *fiber.Ctx) error {
 		IsEncrypted: data.IsEncrypted,
 		AccountID:   user.ID,
 		Type:        models.ChannelTypeDirect,
-		Members: append([]models.ChannelMember{
+		Members: []models.ChannelMember{
 			{AccountID: user.ID, PowerLevel: 100},
-		}, lo.Map(members, func(item models.Account, idx int) models.ChannelMember {
-			return models.ChannelMember{AccountID: item.ID, PowerLevel: 100}
-		})...),
+			{AccountID: relatedUser.ID, PowerLevel: 100},
+		},
 	}
 
 	if realm != nil {
