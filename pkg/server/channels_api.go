@@ -209,12 +209,20 @@ func deleteChannel(c *fiber.Ctx) error {
 			tx = tx.Where("realm_id = ?", val.ID)
 		}
 	} else {
-		tx = tx.Where("account_id = ? AND realm_id IS NULL", user.ID)
+		tx = tx.Where("(account_id = ? OR type = ?) AND realm_id IS NULL", user.ID, models.ChannelTypeDirect)
 	}
 
 	var channel models.Channel
 	if err := tx.First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if channel.Type == models.ChannelTypeDirect {
+		if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+			return fiber.NewError(fiber.StatusForbidden, "you must related to this direct message if you want delete it")
+		} else if member.PowerLevel < 100 {
+			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of this direct message if you want delete it")
+		}
 	}
 
 	if err := services.DeleteChannel(channel); err != nil {

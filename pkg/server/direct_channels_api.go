@@ -38,7 +38,9 @@ func createDirectChannel(c *fiber.Ctx) error {
 	}
 
 	var relatedUser models.Account
-	if err := database.C.Where("id = ?", data.RelatedUser).First(&relatedUser).Error; err != nil {
+	if err := database.C.
+		Where("external_id = ?", data.RelatedUser).
+		First(&relatedUser).Error; err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unable to find related user: %v", err))
 	}
 
