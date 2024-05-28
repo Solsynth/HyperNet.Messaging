@@ -7,6 +7,8 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"github.com/samber/lo"
+	"github.com/spf13/viper"
+	"gorm.io/gorm"
 )
 
 func GetChannelAliasAvailability(alias string) error {
@@ -78,12 +80,27 @@ func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.C
 	return channel, member, nil
 }
 
+func PreloadDirectChannelMembers(tx *gorm.DB) *gorm.DB {
+	return tx.Preload("Members", func(db *gorm.DB) *gorm.DB {
+		return db.Joins(
+			fmt.Sprintf(
+				"JOIN %schannels AS c ON c.type = ?",
+				viper.GetString("database.prefix"),
+			),
+			models.ChannelTypeDirect,
+		)
+	}).Preload("Members.Account")
+}
+
 func ListChannel(realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
 	tx := database.C.Preload("Account").Preload("Realm")
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	}
+
+	tx = PreloadDirectChannelMembers(tx)
+
 	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
 	}
@@ -99,6 +116,9 @@ func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel
 	} else {
 		tx = tx.Where("realm_id IS NULL")
 	}
+
+	tx = PreloadDirectChannelMembers(tx)
+
 	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
 	}
@@ -125,6 +145,9 @@ func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channe
 	} else {
 		tx = tx.Where("realm_id IS NULL")
 	}
+
+	tx = PreloadDirectChannelMembers(tx)
+
 	if err := tx.Find(&channels).Error; err != nil {
 		return channels, err
 	}
