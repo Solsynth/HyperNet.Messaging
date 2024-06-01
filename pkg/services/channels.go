@@ -20,9 +20,11 @@ func GetChannelAliasAvailability(alias string) error {
 
 func GetChannel(id uint) (models.Channel, error) {
 	var channel models.Channel
-	if err := database.C.Where(models.Channel{
+	tx := database.C.Where(models.Channel{
 		BaseModel: models.BaseModel{ID: id},
-	}).Preload("Account").First(&channel).Error; err != nil {
+	}).Preload("Account").Preload("Realm")
+	tx = PreloadDirectChannelMembers(tx)
+	if err := tx.First(&channel).Error; err != nil {
 		return channel, err
 	}
 
@@ -31,12 +33,13 @@ func GetChannel(id uint) (models.Channel, error) {
 
 func GetChannelWithAlias(alias string, realmId ...uint) (models.Channel, error) {
 	var channel models.Channel
-	tx := database.C.Where(models.Channel{Alias: alias}).Preload("Account")
+	tx := database.C.Where(models.Channel{Alias: alias}).Preload("Account").Preload("Realm")
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	} else {
 		tx = tx.Where("realm_id IS NULL")
 	}
+	tx = PreloadDirectChannelMembers(tx)
 	if err := tx.First(&channel).Error; err != nil {
 		return channel, err
 	}
@@ -69,11 +72,11 @@ func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.C
 	if channel, err = GetChannel(id); err != nil {
 		return channel, member, err
 	}
-
-	if err := database.C.Where(models.ChannelMember{
+	tx := database.C.Where(models.ChannelMember{
 		AccountID: user.ID,
 		ChannelID: channel.ID,
-	}).First(&member).Error; err != nil {
+	})
+	if err := tx.First(&member).Error; err != nil {
 		return channel, member, fmt.Errorf("channel principal not found: %v", err.Error())
 	}
 
@@ -113,8 +116,6 @@ func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel
 	tx := database.C.Where(&models.Channel{AccountID: user.ID}).Preload("Realm")
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
-	} else {
-		tx = tx.Where("realm_id IS NULL")
 	}
 
 	tx = PreloadDirectChannelMembers(tx)
@@ -142,8 +143,6 @@ func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channe
 	tx := database.C.Preload("Realm").Where("id IN ?", idx)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
-	} else {
-		tx = tx.Where("realm_id IS NULL")
 	}
 
 	tx = PreloadDirectChannelMembers(tx)
