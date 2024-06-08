@@ -117,6 +117,7 @@ func NewMessage(message models.Message) (models.Message, error) {
 				}
 
 				err = NotifyAccountMessager(member.Account,
+					"incomingMessage",
 					fmt.Sprintf("%s in #%s", message.Sender.Account.Nick, channel.Alias),
 					fmt.Sprintf("%s", displayText),
 					true,

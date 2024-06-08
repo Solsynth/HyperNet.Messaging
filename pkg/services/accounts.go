@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"time"
 
@@ -31,16 +32,16 @@ func GetAccountFriend(userId, relatedId uint, status int) (*proto.FriendshipResp
 	})
 }
 
-func NotifyAccountMessager(user models.Account, subject, content string, realtime bool, forcePush bool, links ...*proto.NotifyLink) error {
+func NotifyAccountMessager(user models.Account, t, s, c string, realtime bool, forcePush bool, links ...*proto.NotifyLink) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := grpc.Notify.NotifyUser(ctx, &proto.NotifyRequest{
 		ClientId:     viper.GetString("passport.client_id"),
 		ClientSecret: viper.GetString("passport.client_secret"),
-		Type:         "notifications.messaging",
-		Subject:      subject,
-		Content:      content,
+		Type:         fmt.Sprintf("messaging.%s", t),
+		Subject:      s,
+		Content:      c,
 		Links:        links,
 		RecipientId:  uint64(user.ExternalID),
 		IsRealtime:   realtime,
