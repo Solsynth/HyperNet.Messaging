@@ -135,7 +135,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 }
 
-func editChannelMembership(c *fiber.Ctx) error {
+func editMyChannelMembership(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	alias := c.Params("channel")
 
@@ -148,7 +148,13 @@ func editChannelMembership(c *fiber.Ctx) error {
 		return err
 	}
 
-	channel, err := services.GetChannelWithAlias(alias)
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
