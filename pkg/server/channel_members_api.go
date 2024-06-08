@@ -30,6 +30,28 @@ func listChannelMembers(c *fiber.Ctx) error {
 	}
 }
 
+func getMyChannelMembership(c *fiber.Ctx) error {
+	alias := c.Params("channel")
+	user := c.Locals("principal").(models.Account)
+
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else {
+		return c.JSON(member)
+	}
+}
+
 func addChannelMember(c *fiber.Ctx) error {
 	user := c.Locals("principal").(models.Account)
 	alias := c.Params("channel")
@@ -118,7 +140,8 @@ func editChannelMembership(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		NotifyLevel int8 `json:"notify_level"`
+		Nick        string `json:"nick"`
+		NotifyLevel int8   `json:"notify_level"`
 	}
 
 	if err := BindAndValidate(c, &data); err != nil {
@@ -139,6 +162,11 @@ func editChannelMembership(c *fiber.Ctx) error {
 	}
 
 	membership.Notify = data.NotifyLevel
+	if len(data.Nick) > 0 {
+		membership.Nick = &data.Nick
+	} else {
+		membership.Nick = nil
+	}
 
 	if membership, err := services.EditChannelMember(membership); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())

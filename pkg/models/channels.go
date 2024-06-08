@@ -38,6 +38,7 @@ type ChannelMember struct {
 
 	ChannelID  uint        `json:"channel_id"`
 	AccountID  uint        `json:"account_id"`
+	Nick       *string     `json:"nick"`
 	Channel    Channel     `json:"channel"`
 	Account    Account     `json:"account"`
 	Notify     NotifyLevel `json:"notify"`

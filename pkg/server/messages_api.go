@@ -86,6 +86,8 @@ func newMessage(c *fiber.Ctx) error {
 		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
 		if err != nil {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		} else if member.PowerLevel < 0 {
+			return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
 		}
 	}
 

@@ -81,6 +81,7 @@ func NewServer() {
 
 			channels.Get("/:channel/members", listChannelMembers)
 			channels.Put("/:channel/members", authMiddleware, editChannelMembership)
+			channels.Get("/:channel/members/me", authMiddleware, getMyChannelMembership)
 			channels.Post("/:channel/members", authMiddleware, addChannelMember)
 			channels.Post("/:channel/members/me", authMiddleware, joinChannel)
 			channels.Delete("/:channel/members", authMiddleware, removeChannelMember)
