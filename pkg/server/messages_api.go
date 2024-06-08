@@ -54,14 +54,18 @@ func newMessage(c *fiber.Ctx) error {
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
-	} else if len(data.Attachments) == 0 {
-		if val, ok := data.Content["type"]; ok && val == models.MessageTextType {
-			if val, ok := data.Content["value"].(string); ok && len(strings.TrimSpace(val)) == 0 {
-				return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
-			}
-		}
 	} else if len(data.Uuid) < 36 {
 		return fiber.NewError(fiber.StatusBadRequest, "message uuid was not valid")
+	}
+
+	if len(data.Attachments) == 0 {
+		if data.Type == models.MessageTextType {
+			if val, ok := data.Content["value"].(string); ok && len(strings.TrimSpace(val)) == 0 {
+				return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
+			} else if !ok {
+				return fiber.NewError(fiber.StatusBadRequest, "invalid content of text message")
+			}
+		}
 	}
 
 	for _, attachment := range data.Attachments {
