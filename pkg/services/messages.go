@@ -90,15 +90,19 @@ func NewMessage(message models.Message) (models.Message, error) {
 				case models.NotifyLevelNone:
 					continue
 				case models.NotifyLevelMentioned:
-					if val, ok := message.Content["metioned_users"]; ok {
+					if member.ID == message.ReplyTo.SenderID {
+						break
+					}
+					if val, ok := message.Content["mentioned_users"]; ok {
 						if usernames, ok := val.([]string); ok {
 							if lo.Contains(usernames, member.Account.Name) {
 								break
 							}
 						}
 					}
-
 					continue
+				default:
+					break
 				}
 
 				var displayText string
@@ -112,10 +116,11 @@ func NewMessage(message models.Message) (models.Message, error) {
 					displayText = fmt.Sprintf("%d attachment(s)", len(message.Attachments))
 				}
 
-				err = NotifyAccount(member.Account,
-					fmt.Sprintf("New Message #%s", channel.Alias),
-					fmt.Sprintf("%s: %s", message.Sender.Account.Name, displayText),
+				err = NotifyAccountMessager(member.Account,
+					fmt.Sprintf("%s in #%s", message.Sender.Account.Nick, channel.Alias),
+					fmt.Sprintf("%s", displayText),
 					true,
+					false,
 				)
 				if err != nil {
 					log.Warn().Err(err).Msg("An error occurred when trying notify user.")

@@ -99,15 +99,14 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		call, _ = GetCall(call.Channel, call.ID)
 		for _, member := range members {
 			if member.ID != call.Founder.ID {
-				if member.Notify == models.NotifyLevelAll {
-					err = NotifyAccount(member.Account,
-						fmt.Sprintf("New Call #%s", channel.Alias),
-						fmt.Sprintf("%s starts a new call", call.Founder.Account.Name),
-						false,
-					)
-					if err != nil {
-						log.Warn().Err(err).Msg("An error occurred when trying notify user.")
-					}
+				err = NotifyAccountMessager(member.Account,
+					fmt.Sprintf("Call in #%s", channel.Alias),
+					fmt.Sprintf("%s started a new call", call.Founder.Account.Name),
+					false,
+					true,
+				)
+				if err != nil {
+					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 				}
 			}
 			PushCommand(member.AccountID, models.UnifiedCommand{
