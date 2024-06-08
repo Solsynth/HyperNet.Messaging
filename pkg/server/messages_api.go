@@ -2,11 +2,11 @@ package server
 
 import (
 	"fmt"
-
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/gofiber/fiber/v2"
+	"strings"
 )
 
 func listMessage(c *fiber.Ctx) error {
@@ -54,8 +54,12 @@ func newMessage(c *fiber.Ctx) error {
 
 	if err := BindAndValidate(c, &data); err != nil {
 		return err
-	} else if len(data.Attachments) == 0 && len(data.Content) == 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "you must write or upload some content in a single message")
+	} else if len(data.Attachments) == 0 {
+		if val, ok := data.Content["type"]; ok && val == models.MessageTextType {
+			if val, ok := data.Content["value"].(string); ok && len(strings.TrimSpace(val)) == 0 {
+				return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
+			}
+		}
 	} else if len(data.Uuid) < 36 {
 		return fiber.NewError(fiber.StatusBadRequest, "message uuid was not valid")
 	}

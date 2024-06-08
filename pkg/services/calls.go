@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/external"
 	"git.solsynth.dev/hydrogen/messaging/pkg/models"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/livekit/protocol/auth"
@@ -80,7 +79,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		return call, fmt.Errorf("this channel already has an ongoing call")
 	}
 
-	_, err := external.Lk.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
+	_, err := Lk.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
 		Name:            call.ExternalID,
 		EmptyTimeout:    viper.GetUint32("calling.empty_timeout_duration"),
 		MaxParticipants: viper.GetUint32("calling.max_participants"),
@@ -123,7 +122,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 func EndCall(call models.Call) (models.Call, error) {
 	call.EndedAt = lo.ToPtr(time.Now())
 
-	if _, err := external.Lk.DeleteRoom(context.Background(), &livekit.DeleteRoomRequest{
+	if _, err := Lk.DeleteRoom(context.Background(), &livekit.DeleteRoomRequest{
 		Room: call.ExternalID,
 	}); err != nil {
 		log.Error().Err(err).Msg("Unable to delete room at livekit side")

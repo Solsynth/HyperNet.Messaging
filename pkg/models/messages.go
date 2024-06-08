@@ -2,6 +2,10 @@ package models
 
 import "gorm.io/datatypes"
 
+const (
+	MessageTextType = "m.text"
+)
+
 type Message struct {
 	BaseModel
 

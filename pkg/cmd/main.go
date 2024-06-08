@@ -5,7 +5,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/external"
 	"git.solsynth.dev/hydrogen/messaging/pkg/services"
 	"github.com/robfig/cron/v3"
 
@@ -44,7 +43,7 @@ func main() {
 	}
 
 	// Connect other services
-	external.SetupLiveKit()
+	services.SetupLiveKit()
 	if err := grpc.ConnectPassport(); err != nil {
 		log.Fatal().Err(err).Msg("An error occurred when connecting to passport...")
 	}

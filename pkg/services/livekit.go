@@ -1,4 +1,4 @@
-package external
+package services
 
 import (
 	lksdk "github.com/livekit/server-sdk-go"
