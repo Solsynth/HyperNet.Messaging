@@ -95,8 +95,8 @@ func NewMessage(message models.Message) (models.Message, error) {
 				case models.NotifyLevelNone:
 					continue
 				case models.NotifyLevelMentioned:
-					if member.ID == message.ReplyTo.SenderID {
-						continue
+					if message.ReplyTo != nil && member.ID == message.ReplyTo.SenderID {
+						break
 					}
 					if val, ok := message.Content["mentioned_users"]; ok {
 						if usernames, ok := val.([]string); ok {
