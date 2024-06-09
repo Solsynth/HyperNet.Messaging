@@ -86,7 +86,9 @@ func NewMessage(message models.Message) (models.Message, error) {
 		message, _ = GetMessage(message.Channel, message.ID)
 		for _, member := range members {
 			doesNotify := true
-			if member.ID != message.Sender.ID {
+			if member.ID == message.SenderID {
+				doesNotify = false
+			} else {
 				switch member.Notify {
 				case models.NotifyLevelNone:
 					doesNotify = false
@@ -105,8 +107,6 @@ func NewMessage(message models.Message) (models.Message, error) {
 				default:
 					break
 				}
-			} else {
-				doesNotify = false
 			}
 
 			if doesNotify {
