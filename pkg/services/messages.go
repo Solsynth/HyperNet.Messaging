@@ -84,11 +84,12 @@ func NewMessage(message models.Message) (models.Message, error) {
 	}).Preload("Account").Find(&members).Error; err == nil {
 		channel := message.Channel
 		message, _ = GetMessage(message.Channel, message.ID)
+		doesNotify := true
 		for _, member := range members {
 			if member.ID != message.Sender.ID {
 				switch member.Notify {
 				case models.NotifyLevelNone:
-					continue
+					doesNotify = false
 				case models.NotifyLevelMentioned:
 					if member.ID == message.ReplyTo.SenderID {
 						break
@@ -100,11 +101,13 @@ func NewMessage(message models.Message) (models.Message, error) {
 							}
 						}
 					}
-					continue
+					doesNotify = false
 				default:
 					break
 				}
+			}
 
+			if doesNotify {
 				var displayText string
 				if message.Content["algorithm"] == "plain" {
 					displayText, _ = message.Content["value"].(string)
@@ -127,6 +130,7 @@ func NewMessage(message models.Message) (models.Message, error) {
 					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 				}
 			}
+
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "messages.new",
 				Payload: message,
