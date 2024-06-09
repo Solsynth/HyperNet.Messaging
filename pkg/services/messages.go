@@ -84,8 +84,8 @@ func NewMessage(message models.Message) (models.Message, error) {
 	}).Preload("Account").Find(&members).Error; err == nil {
 		channel := message.Channel
 		message, _ = GetMessage(message.Channel, message.ID)
-		doesNotify := true
 		for _, member := range members {
+			doesNotify := true
 			if member.ID != message.Sender.ID {
 				switch member.Notify {
 				case models.NotifyLevelNone:
@@ -105,6 +105,8 @@ func NewMessage(message models.Message) (models.Message, error) {
 				default:
 					break
 				}
+			} else {
+				doesNotify = false
 			}
 
 			if doesNotify {
