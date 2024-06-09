@@ -85,16 +85,18 @@ func NewMessage(message models.Message) (models.Message, error) {
 		channel := message.Channel
 		message, _ = GetMessage(message.Channel, message.ID)
 		for _, member := range members {
-			doesNotify := true
-			if member.ID == message.SenderID {
-				doesNotify = false
-			} else {
+			PushCommand(member.AccountID, models.UnifiedCommand{
+				Action:  "messages.new",
+				Payload: message,
+			})
+
+			if member.ID != message.SenderID {
 				switch member.Notify {
 				case models.NotifyLevelNone:
-					doesNotify = false
+					continue
 				case models.NotifyLevelMentioned:
 					if member.ID == message.ReplyTo.SenderID {
-						break
+						continue
 					}
 					if val, ok := message.Content["mentioned_users"]; ok {
 						if usernames, ok := val.([]string); ok {
@@ -103,13 +105,10 @@ func NewMessage(message models.Message) (models.Message, error) {
 							}
 						}
 					}
-					doesNotify = false
 				default:
 					break
 				}
-			}
 
-			if doesNotify {
 				var displayText string
 				if message.Content["algorithm"] == "plain" {
 					displayText, _ = message.Content["value"].(string)
@@ -132,11 +131,6 @@ func NewMessage(message models.Message) (models.Message, error) {
 					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 				}
 			}
-
-			PushCommand(member.AccountID, models.UnifiedCommand{
-				Action:  "messages.new",
-				Payload: message,
-			})
 		}
 	}
 
