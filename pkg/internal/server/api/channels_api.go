@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
@@ -28,7 +29,10 @@ func getChannel(c *fiber.Ctx) error {
 }
 
 func getChannelIdentity(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 
 	var err error
@@ -61,7 +65,10 @@ func listChannel(c *fiber.Ctx) error {
 }
 
 func listOwnedChannel(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 
 	var err error
 	var channels []models.Channel
@@ -78,7 +85,10 @@ func listOwnedChannel(c *fiber.Ctx) error {
 }
 
 func listAvailableChannel(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 
 	var err error
 	var channels []models.Channel
@@ -95,7 +105,10 @@ func listAvailableChannel(c *fiber.Ctx) error {
 }
 
 func createChannel(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 
 	var data struct {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
@@ -146,7 +159,10 @@ func createChannel(c *fiber.Ctx) error {
 }
 
 func editChannel(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	id, _ := c.ParamsInt("channelId", 0)
 
 	var data struct {
@@ -196,7 +212,10 @@ func editChannel(c *fiber.Ctx) error {
 }
 
 func deleteChannel(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	id, _ := c.ParamsInt("channelId", 0)
 
 	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})

@@ -2,6 +2,7 @@ package api
 
 import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -45,7 +46,10 @@ func getOngoingCall(c *fiber.Ctx) error {
 }
 
 func startCall(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -72,7 +76,10 @@ func startCall(c *fiber.Ctx) error {
 }
 
 func endCall(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -105,7 +112,10 @@ func endCall(c *fiber.Ctx) error {
 }
 
 func exchangeCallToken(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 
 	var channel models.Channel

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
@@ -11,7 +12,10 @@ import (
 )
 
 func listMessage(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	take := c.QueryInt("take", 0)
 	offset := c.QueryInt("offset", 0)
 	alias := c.Params("channel")
@@ -42,7 +46,10 @@ func listMessage(c *fiber.Ctx) error {
 }
 
 func newMessage(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 
 	var data struct {
@@ -121,7 +128,10 @@ func newMessage(c *fiber.Ctx) error {
 }
 
 func editMessage(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 
@@ -175,7 +185,10 @@ func editMessage(c *fiber.Ctx) error {
 }
 
 func deleteMessage(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 

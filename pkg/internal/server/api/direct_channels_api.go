@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
@@ -11,7 +12,10 @@ import (
 )
 
 func createDirectChannel(c *fiber.Ctx) error {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
 
 	var data struct {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`

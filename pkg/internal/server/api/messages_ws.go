@@ -9,7 +9,7 @@ import (
 )
 
 func messageGateway(c *websocket.Conn) {
-	user := c.Locals("principal").(models.Account)
+	user := c.Locals("user").(models.Account)
 
 	// Push connection
 	services.ClientRegister(user, c)
