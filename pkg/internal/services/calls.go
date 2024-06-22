@@ -69,7 +69,7 @@ func GetOngoingCall(channel models.Channel) (models.Call, error) {
 func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call, error) {
 	call := models.Call{
 		ExternalID: channel.Alias,
-		FounderID:  founder.ID,
+		FounderID:  founder.AccountID,
 		ChannelID:  channel.ID,
 		Founder:    founder,
 		Channel:    channel,

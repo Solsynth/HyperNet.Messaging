@@ -13,7 +13,7 @@ import (
 	"reflect"
 )
 
-func GetRealm(id uint) (models.Realm, error) {
+func GetRealmWithExtID(id uint) (models.Realm, error) {
 	var realm models.Realm
 	pc, err := gap.H.DiscoverServiceGRPC("Hydrogen.Passport")
 	if err != nil {
@@ -44,12 +44,16 @@ func GetRealmWithAlias(alias string) (models.Realm, error) {
 }
 
 func GetRealmMember(realmId uint, userId uint) (*proto.RealmMemberResponse, error) {
+	var realm models.Realm
+	if err := database.C.Where("id = ?", realmId).First(&realm).Error; err != nil {
+		return nil, err
+	}
 	pc, err := gap.H.DiscoverServiceGRPC("Hydrogen.Passport")
 	if err != nil {
 		return nil, err
 	}
 	response, err := proto.NewRealmsClient(pc).GetRealmMember(context.Background(), &proto.RealmMemberLookupRequest{
-		RealmId: uint64(realmId),
+		RealmId: uint64(realm.ExternalID),
 		UserId:  lo.ToPtr(uint64(userId)),
 	})
 	if err != nil {
