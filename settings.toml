@@ -1,13 +1,11 @@
-name = "Solarplaza"
-maintainer = "SmartSheep Studio"
+id = "messaging01"
 
 frontend = "https://lian.solsynth.dev"
 
 bind = "0.0.0.0:8447"
+grpc_bind = "0.0.0.0:7447"
 domain = "im.solsynth.dev"
 secret = "LtTjzAGFLshwXhN4ZD4nG5KlMv1MWcsvfv03TSZYnT1VhiAnLIZFTnHUwR0XhGgi"
-
-content = "uploads"
 
 [debug]
 database = true
