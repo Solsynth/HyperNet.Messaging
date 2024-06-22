@@ -34,10 +34,10 @@ func listChannelMembers(c *fiber.Ctx) error {
 
 func getMyChannelMembership(c *fiber.Ctx) error {
 	alias := c.Params("channel")
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 
 	var err error
 	var channel models.Channel
@@ -58,10 +58,10 @@ func getMyChannelMembership(c *fiber.Ctx) error {
 }
 
 func addChannelMember(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -102,10 +102,10 @@ func addChannelMember(c *fiber.Ctx) error {
 }
 
 func removeChannelMember(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -147,10 +147,10 @@ func removeChannelMember(c *fiber.Ctx) error {
 }
 
 func editMyChannelMembership(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -196,10 +196,10 @@ func editMyChannelMembership(c *fiber.Ctx) error {
 }
 
 func joinChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -227,10 +227,10 @@ func joinChannel(c *fiber.Ctx) error {
 }
 
 func leaveChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel

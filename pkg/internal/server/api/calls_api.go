@@ -46,10 +46,10 @@ func getOngoingCall(c *fiber.Ctx) error {
 }
 
 func startCall(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -76,10 +76,10 @@ func startCall(c *fiber.Ctx) error {
 }
 
 func endCall(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -112,10 +112,10 @@ func endCall(c *fiber.Ctx) error {
 }
 
 func exchangeCallToken(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel

@@ -8,10 +8,10 @@ import (
 )
 
 func getUserinfo(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 
 	var data models.Account
 	if err := database.C.

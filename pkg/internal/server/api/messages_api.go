@@ -12,10 +12,10 @@ import (
 )
 
 func listMessage(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	take := c.QueryInt("take", 0)
 	offset := c.QueryInt("offset", 0)
 	alias := c.Params("channel")
@@ -46,10 +46,10 @@ func listMessage(c *fiber.Ctx) error {
 }
 
 func newMessage(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -128,10 +128,10 @@ func newMessage(c *fiber.Ctx) error {
 }
 
 func editMessage(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 
@@ -185,10 +185,10 @@ func editMessage(c *fiber.Ctx) error {
 }
 
 func deleteMessage(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 

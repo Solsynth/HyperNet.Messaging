@@ -12,10 +12,10 @@ import (
 )
 
 func createDirectChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 
 	var data struct {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`

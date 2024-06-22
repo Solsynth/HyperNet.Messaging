@@ -29,10 +29,10 @@ func getChannel(c *fiber.Ctx) error {
 }
 
 func getChannelIdentity(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	alias := c.Params("channel")
 
 	var err error
@@ -65,10 +65,10 @@ func listChannel(c *fiber.Ctx) error {
 }
 
 func listOwnedChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 
 	var err error
 	var channels []models.Channel
@@ -85,10 +85,10 @@ func listOwnedChannel(c *fiber.Ctx) error {
 }
 
 func listAvailableChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 
 	var err error
 	var channels []models.Channel
@@ -105,10 +105,10 @@ func listAvailableChannel(c *fiber.Ctx) error {
 }
 
 func createChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 
 	var data struct {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
@@ -159,10 +159,10 @@ func createChannel(c *fiber.Ctx) error {
 }
 
 func editChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
 	var data struct {
@@ -212,10 +212,10 @@ func editChannel(c *fiber.Ctx) error {
 }
 
 func deleteChannel(c *fiber.Ctx) error {
-	user := c.Locals("user").(models.Account)
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
 	}
+	user := c.Locals("user").(models.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
 	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
