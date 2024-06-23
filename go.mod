@@ -6,7 +6,7 @@ toolchain go1.22.1
 
 require (
 	git.solsynth.dev/hydrogen/paperclip v0.0.0-20240622051057-0f56dba45745
-	git.solsynth.dev/hydrogen/passport v0.0.0-20240622131052-18ae5f12e2e7
+	git.solsynth.dev/hydrogen/passport v0.0.0-20240623081149-7ddbea8bcb86
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.52.4
