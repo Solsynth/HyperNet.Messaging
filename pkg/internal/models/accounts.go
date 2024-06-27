@@ -1,8 +1,8 @@
 package models
 
 // Account profiles basically fetched from Hydrogen.Identity
-// But cache at here for better usage
-// At the same time this model can make relations between local models
+// But cached at here for better usage
+// At the same time, this model can make relations between local models
 type Account struct {
 	BaseModel
 

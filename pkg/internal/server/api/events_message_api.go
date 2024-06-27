@@ -1,0 +1,157 @@
+package api
+
+import (
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
+	"github.com/gofiber/fiber/v2"
+	jsoniter "github.com/json-iterator/go"
+)
+
+func newMessageEvent(c *fiber.Ctx) error {
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(models.Account)
+	alias := c.Params("channel")
+
+	var data struct {
+		Uuid string                  `json:"uuid" validate:"required"`
+		Type string                  `json:"type" validate:"required"`
+		Body models.EventMessageBody `json:"body"`
+	}
+
+	if err := exts.BindAndValidate(c, &data); err != nil {
+		return err
+	} else if len(data.Uuid) < 36 {
+		return fiber.NewError(fiber.StatusBadRequest, "message uuid was not valid")
+	}
+
+	if len(data.Body.Text) == 0 && len(data.Body.Attachments) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
+	}
+
+	var err error
+	var channel models.Channel
+	var member models.ChannelMember
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	} else {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		} else if member.PowerLevel < 0 {
+			return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
+		}
+	}
+
+	var parsed map[string]any
+	raw, _ := jsoniter.Marshal(data.Body)
+	_ = jsoniter.Unmarshal(raw, &parsed)
+
+	event := models.Event{
+		Uuid:      data.Uuid,
+		Body:      parsed,
+		Type:      data.Type,
+		Sender:    member,
+		Channel:   channel,
+		ChannelID: channel.ID,
+		SenderID:  member.ID,
+	}
+
+	if event, err = services.NewEvent(event); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(event)
+}
+
+func editMessageEvent(c *fiber.Ctx) error {
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(models.Account)
+	alias := c.Params("channel")
+	messageId, _ := c.ParamsInt("messageId", 0)
+
+	var data struct {
+		Uuid string                  `json:"uuid" validate:"required"`
+		Type string                  `json:"type" validate:"required"`
+		Body models.EventMessageBody `json:"body"`
+	}
+
+	if err := exts.BindAndValidate(c, &data); err != nil {
+		return err
+	}
+
+	if len(data.Body.Text) == 0 && len(data.Body.Attachments) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
+	}
+
+	var err error
+	var channel models.Channel
+	var member models.ChannelMember
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	} else {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	}
+
+	var event models.Event
+	if event, err = services.GetEventWithSender(channel, member, uint(messageId)); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	event, err = services.EditMessage(event, data.Body)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(event)
+}
+
+func deleteMessageEvent(c *fiber.Ctx) error {
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(models.Account)
+	alias := c.Params("channel")
+	messageId, _ := c.ParamsInt("messageId", 0)
+
+	var err error
+	var channel models.Channel
+	var member models.ChannelMember
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	} else {
+		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		if err != nil {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+	}
+
+	var event models.Event
+	if event, err = services.GetEventWithSender(channel, member, uint(messageId)); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	event, err = services.DeleteMessage(event)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(event)
+}

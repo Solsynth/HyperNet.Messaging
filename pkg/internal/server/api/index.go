@@ -33,10 +33,13 @@ func MapAPIs(app *fiber.App) {
 			channels.Delete("/:channel/members", removeChannelMember)
 			channels.Delete("/:channel/members/me", leaveChannel)
 
-			channels.Get("/:channel/messages", listMessage)
-			channels.Post("/:channel/messages", newMessage)
-			channels.Put("/:channel/messages/:messageId", editMessage)
-			channels.Delete("/:channel/messages/:messageId", deleteMessage)
+			channels.Get("/:channel/events", listEvent)
+			channels.Get("/:channel/events/:eventId", getEvent)
+			channels.Post("/:channel/events", newRawEvent)
+
+			channels.Post("/:channel/messages", newMessageEvent)
+			channels.Put("/:channel/messages/:messageId", editMessageEvent)
+			channels.Delete("/:channel/messages/:messageId", deleteMessageEvent)
 
 			channels.Get("/:channel/calls", listCall)
 			channels.Get("/:channel/calls/ongoing", getOngoingCall)
