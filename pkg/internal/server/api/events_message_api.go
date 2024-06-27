@@ -28,6 +28,10 @@ func newMessageEvent(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "message uuid was not valid")
 	}
 
+	if len(data.Body.Text) == 0 && len(data.Body.Attachments) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
+	}
+
 	var err error
 	var channel models.Channel
 	var member models.ChannelMember
@@ -82,6 +86,10 @@ func editMessageEvent(c *fiber.Ctx) error {
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
 		return err
+	}
+
+	if len(data.Body.Text) == 0 && len(data.Body.Attachments) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
 	}
 
 	var err error
