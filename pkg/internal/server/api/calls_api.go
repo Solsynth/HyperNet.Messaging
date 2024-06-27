@@ -6,6 +6,7 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -71,6 +72,16 @@ func startCall(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
+		_, _ = services.NewEvent(models.Event{
+			Uuid:      uuid.NewString(),
+			Body:      map[string]any{},
+			Type:      "calls.start",
+			Channel:   channel,
+			Sender:    membership,
+			ChannelID: channel.ID,
+			SenderID:  membership.ID,
+		})
+
 		return c.JSON(call)
 	}
 }
@@ -107,6 +118,16 @@ func endCall(c *fiber.Ctx) error {
 	if call, err := services.EndCall(call); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	} else {
+		_, _ = services.NewEvent(models.Event{
+			Uuid:      uuid.NewString(),
+			Body:      map[string]any{"last": call.EndedAt.Unix() - call.CreatedAt.Unix()},
+			Type:      "calls.end",
+			Channel:   channel,
+			Sender:    membership,
+			ChannelID: channel.ID,
+			SenderID:  membership.ID,
+		})
+
 		return c.JSON(call)
 	}
 }

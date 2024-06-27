@@ -138,44 +138,15 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 }
 
 func EditEvent(event models.Event) (models.Event, error) {
-	var members []models.ChannelMember
 	if err := database.C.Save(&event).Error; err != nil {
 		return event, err
-	} else if err = database.C.Where(models.ChannelMember{
-		ChannelID: event.ChannelID,
-	}).Find(&members).Error; err == nil {
-		event, _ = GetEvent(models.Channel{
-			BaseModel: models.BaseModel{ID: event.Channel.ID},
-		}, event.ID)
-		for _, member := range members {
-			PushCommand(member.AccountID, models.UnifiedCommand{
-				Action:  "events.update",
-				Payload: event,
-			})
-		}
 	}
-
 	return event, nil
 }
 
 func DeleteEvent(event models.Event) (models.Event, error) {
-	prev, _ := GetEvent(models.Channel{
-		BaseModel: models.BaseModel{ID: event.Channel.ID},
-	}, event.ID)
-
-	var members []models.ChannelMember
 	if err := database.C.Delete(&event).Error; err != nil {
 		return event, err
-	} else if err = database.C.Where(models.ChannelMember{
-		ChannelID: event.ChannelID,
-	}).Find(&members).Error; err == nil {
-		for _, member := range members {
-			PushCommand(member.AccountID, models.UnifiedCommand{
-				Action:  "events.burnt",
-				Payload: prev,
-			})
-		}
 	}
-
 	return event, nil
 }

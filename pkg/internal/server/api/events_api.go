@@ -9,6 +9,35 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func getEvent(c *fiber.Ctx) error {
+	if err := gap.H.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(models.Account)
+	alias := c.Params("channel")
+	id, _ := c.ParamsInt("eventId")
+
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(models.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err != nil {
+		return fiber.NewError(fiber.StatusForbidden, fmt.Sprintf("you need join the channel before you read the messages: %v", err))
+	}
+
+	event, err := services.GetEvent(channel, uint(id))
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	return c.JSON(event)
+}
+
 func listEvent(c *fiber.Ctx) error {
 	if err := gap.H.EnsureAuthenticated(c); err != nil {
 		return err
@@ -32,14 +61,14 @@ func listEvent(c *fiber.Ctx) error {
 	}
 
 	count := services.CountEvent(channel)
-	messages, err := services.ListEvent(channel, take, offset)
+	events, err := services.ListEvent(channel, take, offset)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
 	return c.JSON(fiber.Map{
 		"count": count,
-		"data":  messages,
+		"data":  events,
 	})
 }
 
@@ -79,7 +108,7 @@ func newRawEvent(c *fiber.Ctx) error {
 		}
 	}
 
-	message := models.Event{
+	event := models.Event{
 		Uuid:      data.Uuid,
 		Body:      data.Body,
 		Type:      data.Type,
@@ -89,9 +118,9 @@ func newRawEvent(c *fiber.Ctx) error {
 		SenderID:  member.ID,
 	}
 
-	if message, err = services.NewEvent(message); err != nil {
+	if event, err = services.NewEvent(event); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	return c.JSON(message)
+	return c.JSON(event)
 }
