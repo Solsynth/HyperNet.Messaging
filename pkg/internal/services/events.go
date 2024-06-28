@@ -81,6 +81,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 		return event, nil
 	}
 
+	channel := event.Channel
 	event, _ = GetEvent(event.Channel, event.ID)
 	for _, member := range members {
 		PushCommand(member.AccountID, models.UnifiedCommand{
@@ -90,6 +91,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 	}
 
 	if strings.HasPrefix(event.Type, "messages") {
+		event.Channel = channel
 		NotifyMessageEvent(members, event)
 	}
 
