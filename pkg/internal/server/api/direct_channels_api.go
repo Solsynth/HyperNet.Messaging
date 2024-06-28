@@ -49,6 +49,10 @@ func createDirectChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unable to find related user: %v", err))
 	}
 
+	if ch, err := services.GetDirectChannelByUser(user, relatedUser); err == nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you already have a direct with that user #%d", ch.ID))
+	}
+
 	channel := models.Channel{
 		Alias:       data.Alias,
 		Name:        data.Name,

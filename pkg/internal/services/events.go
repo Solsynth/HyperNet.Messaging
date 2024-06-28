@@ -125,9 +125,18 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				displayText = fmt.Sprintf("%d attachment(s)", len(body.Attachments))
 			}
 
+			var channelDisplay string
+			if event.Channel.Type == models.ChannelTypeDirect {
+				channelDisplay = "DM"
+			}
+
+			if len(channelDisplay) == 0 {
+				channelDisplay = event.Channel.Alias
+			}
+
 			err := NotifyAccountMessager(member.Account,
 				"incomingMessage",
-				fmt.Sprintf("%s in #%s", event.Sender.Account.Nick, event.Channel.Alias),
+				fmt.Sprintf("%s in #%s", event.Sender.Account.Nick, channelDisplay),
 				fmt.Sprintf("%s", displayText),
 				true,
 				false,
