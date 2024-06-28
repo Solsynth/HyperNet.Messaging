@@ -2,12 +2,13 @@ package services
 
 import (
 	"fmt"
+	"strings"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
-	"strings"
 )
 
 func CountEvent(channel models.Channel) int64 {
@@ -131,12 +132,12 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			}
 
 			if len(channelDisplay) == 0 {
-				channelDisplay = event.Channel.Alias
+				channelDisplay = fmt.Sprintf("#%s", event.Channel.Alias)
 			}
 
 			err := NotifyAccountMessager(member.Account,
 				"incomingMessage",
-				fmt.Sprintf("%s in #%s", event.Sender.Account.Nick, channelDisplay),
+				fmt.Sprintf("%s in %s", event.Sender.Account.Nick, channelDisplay),
 				fmt.Sprintf("%s", displayText),
 				true,
 				false,
