@@ -111,8 +111,8 @@ func endCall(c *fiber.Ctx) error {
 	call, err := services.GetOngoingCall(channel)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if call.FounderID != user.ID && channel.AccountID != user.ID {
-		return fiber.NewError(fiber.StatusBadRequest, "only call founder or channel owner can end this call")
+	} else if call.FounderID != user.ID && membership.PowerLevel < 100 {
+		return fiber.NewError(fiber.StatusBadRequest, "only call founder or channel admin can end this call")
 	}
 
 	if call, err := services.EndCall(call); err != nil {
