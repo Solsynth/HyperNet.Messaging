@@ -1,8 +1,6 @@
 package api
 
 import (
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -47,12 +45,5 @@ func MapAPIs(app *fiber.App) {
 			channels.Delete("/:channel/calls/ongoing", endCall)
 			channels.Post("/:channel/calls/ongoing/token", exchangeCallToken)
 		}
-
-		api.Use(func(c *fiber.Ctx) error {
-			if err := gap.H.EnsureAuthenticated(c); err != nil {
-				return err
-			}
-			return c.Next()
-		}).Get("/ws", websocket.New(messageGateway))
 	}
 }
