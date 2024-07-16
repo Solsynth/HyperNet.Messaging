@@ -1,20 +1,16 @@
 package server
 
 import (
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal"
+	"strings"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/api"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
-	"net/http"
-	"strings"
-
-	"github.com/gofiber/fiber/v2/middleware/favicon"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/idempotency"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/template/html/v2"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -23,8 +19,6 @@ import (
 var A *fiber.App
 
 func NewServer() {
-	templates := html.NewFileSystem(http.FS(pkg.FS), ".gohtml")
-
 	A = fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		EnableIPValidation:    true,
@@ -35,8 +29,6 @@ func NewServer() {
 		JSONDecoder:           jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal,
 		BodyLimit:             50 * 1024 * 1024,
 		EnablePrintRoutes:     viper.GetBool("debug.print_routes"),
-		Views:                 templates,
-		ViewsLayout:           "views/index",
 	})
 
 	A.Use(idempotency.New())
@@ -64,19 +56,7 @@ func NewServer() {
 	A.Use(gap.H.AuthMiddleware)
 	A.Use(exts.LinkAccountMiddleware)
 
-	A.Use(favicon.New(favicon.Config{
-		FileSystem: http.FS(pkg.FS),
-		File:       "views/favicon.png",
-		URL:        "/favicon.png",
-	}))
-
-	api.MapAPIs(A)
-
-	A.Get("/", func(c *fiber.Ctx) error {
-		return c.Render("views/open", fiber.Map{
-			"frontend": viper.GetString("frontend"),
-		})
-	})
+	api.MapAPIs(A, "/")
 }
 
 func Listen() {
