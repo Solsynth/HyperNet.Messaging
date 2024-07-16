@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 
 	"git.solsynth.dev/hydrogen/paperclip/pkg/proto"
@@ -9,7 +10,7 @@ import (
 )
 
 func CheckAttachmentByIDExists(id uint, usage string) bool {
-	pc, err := gap.H.DiscoverServiceGRPC("Hydrogen.Passport")
+	pc, err := gap.H.GetServiceGrpcConn(hyper.ServiceTypeAuthProvider)
 	if err != nil {
 		return false
 	}

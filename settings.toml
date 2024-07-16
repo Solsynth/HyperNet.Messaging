@@ -7,11 +7,11 @@ grpc_bind = "0.0.0.0:7447"
 domain = "im.solsynth.dev"
 secret = "LtTjzAGFLshwXhN4ZD4nG5KlMv1MWcsvfv03TSZYnT1VhiAnLIZFTnHUwR0XhGgi"
 
-[consul]
-addr = "127.0.0.1:8500"
+[dealer]
+addr = "127.0.0.1:7442"
 
 [debug]
-database = true
+database = false
 print_routes = false
 
 [calling]

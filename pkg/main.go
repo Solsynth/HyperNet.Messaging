@@ -44,12 +44,10 @@ func main() {
 	}
 
 	// Connect other services
-	services.SetupLiveKit()
-	if err := gap.Register(); err != nil {
+	if err := gap.RegisterService(); err != nil {
 		log.Fatal().Err(err).Msg("An error occurred when connecting to consul...")
-	} else {
-		gap.NewHyperClient()
 	}
+	services.SetupLiveKit()
 
 	// Server
 	server.NewServer()

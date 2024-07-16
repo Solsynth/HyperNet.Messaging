@@ -99,9 +99,9 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		for _, member := range members {
 			if member.ID != call.Founder.ID {
 				err = NotifyAccountMessager(member.Account,
-					"incomingCall",
 					fmt.Sprintf("Call in #%s", channel.Alias),
 					fmt.Sprintf("%s started a new call", call.Founder.Account.Name),
+					nil,
 					false,
 					true,
 				)

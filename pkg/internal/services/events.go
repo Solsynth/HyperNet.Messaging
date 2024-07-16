@@ -136,9 +136,9 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			}
 
 			err := NotifyAccountMessager(member.Account,
-				"incomingMessage",
 				fmt.Sprintf("%s in %s", event.Sender.Account.Nick, channelDisplay),
 				fmt.Sprintf("%s", displayText),
+				nil,
 				true,
 				false,
 			)
