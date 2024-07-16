@@ -5,14 +5,13 @@ go 1.22
 toolchain go1.22.1
 
 require (
+	git.solsynth.dev/hydrogen/dealer v0.0.0-20240716024524-cfb73fde1951
 	git.solsynth.dev/hydrogen/paperclip v0.0.0-20240622051057-0f56dba45745
-	git.solsynth.dev/hydrogen/passport v0.0.0-20240623083719-86b2cd81400a
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/gofiber/template/html/v2 v2.1.1
-	github.com/golang-jwt/jwt/v5 v5.2.0
-	github.com/hashicorp/consul/api v1.29.1
+	github.com/google/uuid v1.6.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/livekit/protocol v1.14.0
@@ -54,8 +53,8 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gofiber/template v1.8.3 // indirect
 	github.com/gofiber/utils v1.1.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
+	github.com/hashicorp/consul/api v1.29.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect

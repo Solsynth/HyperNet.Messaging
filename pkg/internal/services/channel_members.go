@@ -33,8 +33,8 @@ func GetChannelMember(user models.Account, channelId uint) (models.ChannelMember
 }
 
 func AddChannelMemberWithCheck(user models.Account, target models.Channel) error {
-	if _, err := GetAccountFriend(user.ID, target.AccountID, 1); err != nil {
-		return fmt.Errorf("you only can invite your friends to your channel")
+	if err := CheckUserPerm(user.ID, target.AccountID, "ChannelAdd", true); err != nil {
+		return fmt.Errorf("unable to add user into your channel")
 	}
 
 	member := models.ChannelMember{
