@@ -120,7 +120,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				break
 			}
 
-			pendingIdx = append(pendingIdx, uint64(member.AccountID))
+			pendingIdx = append(pendingIdx, uint64(member.Account.ExternalID))
 		}
 	}
 
