@@ -84,12 +84,13 @@ func NewEvent(event models.Event) (models.Event, error) {
 
 	channel := event.Channel
 	event, _ = GetEvent(event.Channel, event.ID)
-	for _, member := range members {
-		PushCommand(member.AccountID, models.UnifiedCommand{
-			Action:  "events.new",
-			Payload: event,
-		})
-	}
+	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
+		return uint64(item.AccountID)
+	})
+	PushCommandBatch(idxList, models.UnifiedCommand{
+		Action:  "events.new",
+		Payload: event,
+	})
 
 	if strings.HasPrefix(event.Type, "messages") {
 		event.Channel = channel
@@ -104,6 +105,8 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	raw, _ := jsoniter.Marshal(event.Body)
 	_ = jsoniter.Unmarshal(raw, &body)
 
+	var pendingIdx []uint64
+
 	for _, member := range members {
 		if member.ID != event.SenderID {
 			switch member.Notify {
@@ -117,35 +120,38 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				break
 			}
 
-			var displayText string
-			if body.Algorithm == "plain" {
-				displayText = body.Text
-			}
-
-			if len(displayText) == 0 {
-				displayText = fmt.Sprintf("%d attachment(s)", len(body.Attachments))
-			}
-
-			var channelDisplay string
-			if event.Channel.Type == models.ChannelTypeDirect {
-				channelDisplay = "DM"
-			}
-
-			if len(channelDisplay) == 0 {
-				channelDisplay = fmt.Sprintf("#%s", event.Channel.Alias)
-			}
-
-			err := NotifyAccountMessager(member.Account,
-				fmt.Sprintf("%s in %s", event.Sender.Account.Nick, channelDisplay),
-				fmt.Sprintf("%s", displayText),
-				nil,
-				true,
-				false,
-			)
-			if err != nil {
-				log.Warn().Err(err).Msg("An error occurred when trying notify user.")
-			}
+			pendingIdx = append(pendingIdx, uint64(member.AccountID))
 		}
+	}
+
+	var displayText string
+	if body.Algorithm == "plain" {
+		displayText = body.Text
+	}
+
+	if len(displayText) == 0 {
+		displayText = fmt.Sprintf("%d attachment(s)", len(body.Attachments))
+	}
+
+	var channelDisplay string
+	if event.Channel.Type == models.ChannelTypeDirect {
+		channelDisplay = "DM"
+	}
+
+	if len(channelDisplay) == 0 {
+		channelDisplay = fmt.Sprintf("#%s", event.Channel.Alias)
+	}
+
+	err := NotifyAccountMessagerBatch(
+		pendingIdx,
+		fmt.Sprintf("%s in %s", event.Sender.Account.Nick, channelDisplay),
+		displayText,
+		nil,
+		true,
+		false,
+	)
+	if err != nil {
+		log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 	}
 }
 
