@@ -66,6 +66,16 @@ func GetOngoingCall(channel models.Channel) (models.Call, error) {
 	}
 }
 
+func GetCallParticipants(call models.Call) ([]*livekit.ParticipantInfo, error) {
+	res, err := Lk.ListParticipants(context.Background(), &livekit.ListParticipantsRequest{
+		Room: call.ExternalID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.Participants, nil
+}
+
 func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call, error) {
 	call := models.Call{
 		ExternalID: channel.Alias,
@@ -94,7 +104,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: call.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
-		channel := call.Channel
+		channel = call.Channel
 		call, _ = GetCall(call.Channel, call.ID)
 		for _, member := range members {
 			if member.ID != call.Founder.ID {
@@ -144,6 +154,14 @@ func EndCall(call models.Call) (models.Call, error) {
 	}
 
 	return call, nil
+}
+
+func KickParticipantInCall(call models.Call, username string) error {
+	_, err := Lk.RemoveParticipant(context.Background(), &livekit.RoomParticipantIdentity{
+		Room:     call.ExternalID,
+		Identity: username,
+	})
+	return err
 }
 
 func EncodeCallToken(user models.Account, call models.Call) (string, error) {

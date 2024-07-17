@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"github.com/livekit/protocol/livekit"
+	"time"
+)
 
 type Call struct {
 	BaseModel
@@ -12,4 +15,6 @@ type Call struct {
 	ChannelID  uint          `json:"channel_id"`
 	Founder    ChannelMember `json:"founder"`
 	Channel    Channel       `json:"channel"`
+
+	Participants []*livekit.ParticipantInfo `json:"participants" gorm:"-"`
 }

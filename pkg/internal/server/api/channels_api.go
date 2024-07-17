@@ -105,7 +105,7 @@ func listAvailableChannel(c *fiber.Ctx) error {
 }
 
 func createChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := gap.H.EnsureGrantedPerm(c, "CreateChannels", true); err != nil {
 		return err
 	}
 	user := c.Locals("user").(models.Account)
