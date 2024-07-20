@@ -138,7 +138,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		pendingUsers,
 		&proto.NotifyRequest{
 			Topic:  "messaging.message",
-			Title:  fmt.Sprint("%s in %s", event.Sender.Account.Nick, event.Channel.DisplayText()),
+			Title:  fmt.Sprintf("%s in %s", event.Sender.Account.Nick, event.Channel.DisplayText()),
 			Body:   displayText,
 			Avatar: &event.Sender.Account.Avatar,
 			Metadata: EncodeJSONBody(map[string]any{
