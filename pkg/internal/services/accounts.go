@@ -9,6 +9,7 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/samber/lo"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -49,7 +50,7 @@ func CheckUserPerm(userId, otherId uint, key string, val any) error {
 	return nil
 }
 
-func NotifyAccountMessager(user models.Account, title, body string, subtitle *string, realtime bool, forcePush bool) error {
+func NotifyAccountMessager(user models.Account, notification *proto.NotifyRequest) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -59,20 +60,13 @@ func NotifyAccountMessager(user models.Account, title, body string, subtitle *st
 	}
 	_, err = proto.NewNotifierClient(pc).NotifyUser(ctx, &proto.NotifyUserRequest{
 		UserId: uint64(user.ExternalID),
-		Notify: &proto.NotifyRequest{
-			Topic:       "messaging.message",
-			Title:       title,
-			Subtitle:    subtitle,
-			Body:        body,
-			IsRealtime:  realtime,
-			IsForcePush: forcePush,
-		},
+		Notify: notification,
 	})
 
 	return err
 }
 
-func NotifyAccountMessagerBatch(users []uint64, title, body string, subtitle *string, realtime bool, forcePush bool) error {
+func NotifyAccountMessagerBatch(users []models.Account, notification *proto.NotifyRequest) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -81,15 +75,10 @@ func NotifyAccountMessagerBatch(users []uint64, title, body string, subtitle *st
 		return err
 	}
 	_, err = proto.NewNotifierClient(pc).NotifyUserBatch(ctx, &proto.NotifyUserBatchRequest{
-		UserId: users,
-		Notify: &proto.NotifyRequest{
-			Topic:       "messaging.message",
-			Title:       title,
-			Subtitle:    subtitle,
-			Body:        body,
-			IsRealtime:  realtime,
-			IsForcePush: forcePush,
-		},
+		UserId: lo.Map(users, func(item models.Account, idx int) uint64 {
+			return uint64(item.ExternalID)
+		}),
+		Notify: notification,
 	})
 
 	return err

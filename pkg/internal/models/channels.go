@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 type ChannelType = uint8
 
 const (
@@ -23,6 +25,13 @@ type Channel struct {
 
 	Realm   Realm `json:"realm"`
 	RealmID *uint `json:"realm_id"`
+}
+
+func (v Channel) DisplayText() string {
+	if v.Type == ChannelTypeDirect {
+		return "DM"
+	}
+	return fmt.Sprintf("#%s", v.Alias)
 }
 
 type NotifyLevel = int8

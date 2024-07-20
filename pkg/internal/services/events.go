@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
@@ -105,7 +106,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	raw, _ := jsoniter.Marshal(event.Body)
 	_ = jsoniter.Unmarshal(raw, &body)
 
-	var pendingIdx []uint64
+	var pendingUsers []models.Account
 
 	for _, member := range members {
 		if member.ID != event.SenderID {
@@ -120,7 +121,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				break
 			}
 
-			pendingIdx = append(pendingIdx, uint64(member.Account.ExternalID))
+			pendingUsers = append(pendingUsers, member.Account)
 		}
 	}
 
@@ -133,22 +134,22 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		displayText = fmt.Sprintf("%d attachment(s)", len(body.Attachments))
 	}
 
-	var channelDisplay string
-	if event.Channel.Type == models.ChannelTypeDirect {
-		channelDisplay = "DM"
-	}
-
-	if len(channelDisplay) == 0 {
-		channelDisplay = fmt.Sprintf("#%s", event.Channel.Alias)
-	}
-
 	err := NotifyAccountMessagerBatch(
-		pendingIdx,
-		fmt.Sprintf("%s in %s", event.Sender.Account.Nick, channelDisplay),
-		displayText,
-		nil,
-		true,
-		false,
+		pendingUsers,
+		&proto.NotifyRequest{
+			Topic:  "messaging.message",
+			Title:  fmt.Sprint("%s in %s", event.Sender.Account.Nick, event.Channel.DisplayText()),
+			Body:   displayText,
+			Avatar: &event.Sender.Account.Avatar,
+			Metadata: EncodeJSONBody(map[string]any{
+				"user_id":    event.Sender.Account.ExternalID,
+				"user_name":  event.Sender.Account.Name,
+				"user_nick":  event.Sender.Account.Nick,
+				"channel_id": event.ChannelID,
+			}),
+			IsRealtime:  true,
+			IsForcePush: false,
+		},
 	)
 	if err != nil {
 		log.Warn().Err(err).Msg("An error occurred when trying notify user.")

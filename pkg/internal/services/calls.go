@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
+	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
@@ -13,7 +16,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
-	"time"
 )
 
 func ListCall(channel models.Channel, take, offset int) ([]models.Call, error) {
@@ -106,23 +108,36 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 	}).Preload("Account").Find(&members).Error; err == nil {
 		channel = call.Channel
 		call, _ = GetCall(call.Channel, call.ID)
+		var pendingUsers []models.Account
 		for _, member := range members {
 			if member.ID != call.Founder.ID {
-				err = NotifyAccountMessager(member.Account,
-					fmt.Sprintf("Call in #%s", channel.Alias),
-					fmt.Sprintf("%s started a new call", call.Founder.Account.Name),
-					nil,
-					false,
-					true,
-				)
-				if err != nil {
-					log.Warn().Err(err).Msg("An error occurred when trying notify user.")
-				}
+				pendingUsers = append(pendingUsers, member.Account)
 			}
 			PushCommand(member.AccountID, models.UnifiedCommand{
 				Action:  "calls.new",
 				Payload: call,
 			})
+		}
+
+		err = NotifyAccountMessagerBatch(
+			pendingUsers,
+			&proto.NotifyRequest{
+				Topic:  "messaging.callStart",
+				Title:  fmt.Sprintf("Call in %s", channel.DisplayText()),
+				Body:   fmt.Sprintf("%s is calling", call.Founder.Account.Name),
+				Avatar: &call.Founder.Account.Avatar,
+				Metadata: EncodeJSONBody(map[string]any{
+					"user_id":    call.Founder.Account.ExternalID,
+					"user_name":  call.Founder.Account.Name,
+					"user_nick":  call.Founder.Account.Nick,
+					"channel_id": call.ChannelID,
+				}),
+				IsRealtime:  false,
+				IsForcePush: true,
+			},
+		)
+		if err != nil {
+			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
 		}
 	}
 
