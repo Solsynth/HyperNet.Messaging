@@ -184,7 +184,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		}
 
 		err := NotifyAccountMessagerBatch(
-			pendingUsers,
+			metionedUsers,
 			&proto.NotifyRequest{
 				Topic:    "messaging.message",
 				Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
