@@ -114,15 +114,15 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			case models.NotifyLevelNone:
 				continue
 			case models.NotifyLevelMentioned:
-				if len(body.RelatedUsers) == 0 || !lo.Contains(body.RelatedUsers, member.AccountID) {
+				if len(body.RelatedUsers) != 0 && lo.Contains(body.RelatedUsers, member.Account.ExternalID) {
 					metionedUsers = append(metionedUsers, member.Account)
-					break
 				}
+				continue
 			default:
 				break
 			}
 
-			if lo.Contains(body.RelatedUsers, member.AccountID) {
+			if lo.Contains(body.RelatedUsers, member.Account.ExternalID) {
 				metionedUsers = append(metionedUsers, member.Account)
 			} else {
 				pendingUsers = append(pendingUsers, member.Account)
