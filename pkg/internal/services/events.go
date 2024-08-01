@@ -83,7 +83,6 @@ func NewEvent(event models.Event) (models.Event, error) {
 		return event, nil
 	}
 
-	channel := event.Channel
 	event, _ = GetEvent(event.Channel, event.ID)
 	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
 		return uint64(item.AccountID)
@@ -94,7 +93,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 	})
 
 	if strings.HasPrefix(event.Type, "messages") {
-		event.Channel = channel
+		event.Channel, _ = GetChannel(event.ChannelID)
 		NotifyMessageEvent(members, event)
 	}
 
@@ -126,21 +125,35 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	var displayText string
-	if body.Algorithm == "plain" {
-		displayText = body.Text
+	var displaySubtitle *string
+	switch event.Type {
+	case models.EventMessageNew:
+		if body.Algorithm == "plain" {
+			displayText = body.Text
+		}
+	case models.EventMessageEdit:
+		displaySubtitle = lo.ToPtr("Edited a message")
+		if body.Algorithm == "plain" {
+			displayText = body.Text
+		}
+	case models.EventMessageDelete:
+		displayText = "Recalled a message"
 	}
 
 	if len(displayText) == 0 {
 		displayText = fmt.Sprintf("%d attachment(s)", len(body.Attachments))
+	} else {
+		displayText += fmt.Sprintf("w/ %d attachment(s)", len(body.Attachments))
 	}
 
 	err := NotifyAccountMessagerBatch(
 		pendingUsers,
 		&proto.NotifyRequest{
-			Topic:  "messaging.message",
-			Title:  fmt.Sprintf("%s in %s", event.Sender.Account.Nick, event.Channel.DisplayText()),
-			Body:   displayText,
-			Avatar: &event.Sender.Account.Avatar,
+			Topic:    "messaging.message",
+			Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
+			Subtitle: displaySubtitle,
+			Body:     displayText,
+			Avatar:   &event.Sender.Account.Avatar,
 			Metadata: EncodeJSONBody(map[string]any{
 				"user_id":    event.Sender.Account.ExternalID,
 				"user_name":  event.Sender.Account.Name,

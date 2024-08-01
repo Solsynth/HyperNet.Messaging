@@ -31,7 +31,10 @@ func (v Channel) DisplayText() string {
 	if v.Type == ChannelTypeDirect {
 		return "DM"
 	}
-	return fmt.Sprintf("#%s", v.Alias)
+	if v.RealmID != nil {
+		return fmt.Sprintf("%s, %s", v.Alias, v.Realm.Alias)
+	}
+	return fmt.Sprintf("%s", v.Alias)
 }
 
 type NotifyLevel = int8

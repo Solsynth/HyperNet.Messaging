@@ -29,7 +29,7 @@ func newMessageEvent(c *fiber.Ctx) error {
 	}
 
 	if len(data.Body.Text) == 0 && len(data.Body.Attachments) == 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "you cannot send an empty message")
+		return fiber.NewError(fiber.StatusBadRequest, "cannot send an empty message")
 	}
 
 	var err error
@@ -37,18 +37,13 @@ func newMessageEvent(c *fiber.Ctx) error {
 	var member models.ChannelMember
 	if val, ok := c.Locals("realm").(models.Realm); ok {
 		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		} else if member.PowerLevel < 0 {
-			return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
-		}
 	} else {
 		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		} else if member.PowerLevel < 0 {
-			return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
-		}
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if member.PowerLevel < 0 {
+		return fiber.NewError(fiber.StatusForbidden, "unable to send message, access denied")
 	}
 
 	var parsed map[string]any
@@ -99,14 +94,11 @@ func editMessageEvent(c *fiber.Ctx) error {
 	var member models.ChannelMember
 	if val, ok := c.Locals("realm").(models.Realm); ok {
 		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		}
 	} else {
 		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		}
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
 	var event models.Event
