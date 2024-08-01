@@ -106,6 +106,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	_ = jsoniter.Unmarshal(raw, &body)
 
 	var pendingUsers []models.Account
+	var metionedUsers []models.Account
 
 	for _, member := range members {
 		if member.ID != event.SenderID {
@@ -114,13 +115,18 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				continue
 			case models.NotifyLevelMentioned:
 				if len(body.RelatedUsers) == 0 || !lo.Contains(body.RelatedUsers, member.AccountID) {
-					continue
+					metionedUsers = append(metionedUsers, member.Account)
+					break
 				}
 			default:
 				break
 			}
 
-			pendingUsers = append(pendingUsers, member.Account)
+			if lo.Contains(body.RelatedUsers, member.AccountID) {
+				metionedUsers = append(metionedUsers, member.Account)
+			} else {
+				pendingUsers = append(pendingUsers, member.Account)
+			}
 		}
 	}
 
@@ -141,31 +147,63 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	if len(displayText) == 0 {
-		displayText = fmt.Sprintf("%d attachment(s)", len(body.Attachments))
-	} else {
-		displayText += fmt.Sprintf("w/ %d attachment(s)", len(body.Attachments))
+		displayText = fmt.Sprintf("%d file(s)", len(body.Attachments))
+	} else if len(body.Attachments) > 0 {
+		displayText += fmt.Sprintf("with %d file(s)", len(body.Attachments))
 	}
 
-	err := NotifyAccountMessagerBatch(
-		pendingUsers,
-		&proto.NotifyRequest{
-			Topic:    "messaging.message",
-			Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
-			Subtitle: displaySubtitle,
-			Body:     displayText,
-			Avatar:   &event.Sender.Account.Avatar,
-			Metadata: EncodeJSONBody(map[string]any{
-				"user_id":    event.Sender.Account.ExternalID,
-				"user_name":  event.Sender.Account.Name,
-				"user_nick":  event.Sender.Account.Nick,
-				"channel_id": event.ChannelID,
-			}),
-			IsRealtime:  true,
-			IsForcePush: false,
-		},
-	)
-	if err != nil {
-		log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+	if len(pendingUsers) > 0 {
+		err := NotifyAccountMessagerBatch(
+			pendingUsers,
+			&proto.NotifyRequest{
+				Topic:    "messaging.message",
+				Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
+				Subtitle: displaySubtitle,
+				Body:     displayText,
+				Avatar:   &event.Sender.Account.Avatar,
+				Metadata: EncodeJSONBody(map[string]any{
+					"user_id":    event.Sender.Account.ExternalID,
+					"user_name":  event.Sender.Account.Name,
+					"user_nick":  event.Sender.Account.Nick,
+					"channel_id": event.ChannelID,
+				}),
+				IsRealtime:  true,
+				IsForcePush: false,
+			},
+		)
+		if err != nil {
+			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+		}
+	}
+
+	if len(metionedUsers) > 0 {
+		if displaySubtitle != nil && len(*displaySubtitle) > 0 {
+			*displaySubtitle += ", and metioned you"
+		} else {
+			displaySubtitle = lo.ToPtr("Metioned you")
+		}
+
+		err := NotifyAccountMessagerBatch(
+			pendingUsers,
+			&proto.NotifyRequest{
+				Topic:    "messaging.message",
+				Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
+				Subtitle: displaySubtitle,
+				Body:     displayText,
+				Avatar:   &event.Sender.Account.Avatar,
+				Metadata: EncodeJSONBody(map[string]any{
+					"user_id":    event.Sender.Account.ExternalID,
+					"user_name":  event.Sender.Account.Name,
+					"user_nick":  event.Sender.Account.Nick,
+					"channel_id": event.ChannelID,
+				}),
+				IsRealtime:  true,
+				IsForcePush: false,
+			},
+		)
+		if err != nil {
+			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+		}
 	}
 }
 
