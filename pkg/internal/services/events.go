@@ -147,9 +147,17 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	if len(displayText) == 0 {
-		displayText = fmt.Sprintf("%d file(s)", len(body.Attachments))
+		if len(displayText) == 1 {
+			displayText = fmt.Sprintf("%d file", len(body.Attachments))
+		} else {
+			displayText = fmt.Sprintf("%d files", len(body.Attachments))
+		}
 	} else if len(body.Attachments) > 0 {
-		displayText += fmt.Sprintf("with %d file(s)", len(body.Attachments))
+		if len(displayText) == 1 {
+			displayText += fmt.Sprintf(" (%d file)", len(body.Attachments))
+		} else {
+			displayText += fmt.Sprintf(" (%d files)", len(body.Attachments))
+		}
 	}
 
 	if len(pendingUsers) > 0 {
