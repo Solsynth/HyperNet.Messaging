@@ -79,8 +79,9 @@ func GetCallParticipants(call models.Call) ([]*livekit.ParticipantInfo, error) {
 }
 
 func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call, error) {
+	id := fmt.Sprintf("%s+%d", channel.Alias, channel.ID)
 	call := models.Call{
-		ExternalID: channel.Alias,
+		ExternalID: id,
 		FounderID:  founder.AccountID,
 		ChannelID:  channel.ID,
 		Founder:    founder,
@@ -92,7 +93,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 	}
 
 	_, err := Lk.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
-		Name:            call.ExternalID,
+		Name:            id,
 		EmptyTimeout:    viper.GetUint32("calling.empty_timeout_duration"),
 		MaxParticipants: viper.GetUint32("calling.max_participants"),
 	})
