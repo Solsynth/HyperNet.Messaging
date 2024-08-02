@@ -107,7 +107,6 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: call.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
-		channel = call.Channel
 		call, _ = GetCall(call.Channel, call.ID)
 		var pendingUsers []models.Account
 		for _, member := range members {
@@ -120,11 +119,13 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 			})
 		}
 
+		channel, _ = GetChannel(channel.ID)
+
 		err = NotifyAccountMessagerBatch(
 			pendingUsers,
 			&proto.NotifyRequest{
 				Topic:  "messaging.callStart",
-				Title:  fmt.Sprintf("Call in %s", channel.DisplayText()),
+				Title:  fmt.Sprintf("Call in (%s)", channel.DisplayText()),
 				Body:   fmt.Sprintf("%s is calling", call.Founder.Account.Name),
 				Avatar: &call.Founder.Account.Avatar,
 				Metadata: EncodeJSONBody(map[string]any{
@@ -181,10 +182,7 @@ func KickParticipantInCall(call models.Call, username string) error {
 }
 
 func EncodeCallToken(user models.Account, call models.Call) (string, error) {
-	isAdmin := false
-	if user.ID == call.FounderID || user.ID == call.Channel.AccountID {
-		isAdmin = true
-	}
+	isAdmin := user.ID == call.FounderID || user.ID == call.Channel.AccountID
 
 	grant := &auth.VideoGrant{
 		Room:      call.ExternalID,

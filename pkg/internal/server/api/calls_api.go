@@ -1,6 +1,8 @@
 package api
 
 import (
+	"sync"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -9,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
-	"sync"
 )
 
 var callLocks sync.Map
@@ -129,7 +130,7 @@ func endCall(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if call.FounderID != user.ID && membership.PowerLevel < 50 {
-		return fiber.NewError(fiber.StatusBadRequest, "only call founder or channel admin can end this call")
+		return fiber.NewError(fiber.StatusBadRequest, "only call founder or channel moderator can end this call")
 	}
 
 	if call, err := services.EndCall(call); err != nil {
