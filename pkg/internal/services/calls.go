@@ -82,7 +82,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 	id := fmt.Sprintf("%s+%d", channel.Alias, channel.ID)
 	call := models.Call{
 		ExternalID: id,
-		FounderID:  founder.AccountID,
+		FounderID:  founder.ID,
 		ChannelID:  channel.ID,
 		Founder:    founder,
 		Channel:    channel,
