@@ -1,6 +1,8 @@
 package api
 
 import (
+	"strings"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
@@ -49,6 +51,13 @@ func newMessageEvent(c *fiber.Ctx) error {
 	var parsed map[string]any
 	raw, _ := jsoniter.Marshal(data.Body)
 	_ = jsoniter.Unmarshal(raw, &parsed)
+
+	if val, ok := parsed["text"].(string); ok {
+		val = strings.TrimSpace(val)
+		parsed["text"] = val
+	} else if files, ok := parsed["attachments"].([]any); (!ok || len(files) == 0) && len(val) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "empty message was not allowed")
+	}
 
 	event := models.Event{
 		Uuid:      data.Uuid,
