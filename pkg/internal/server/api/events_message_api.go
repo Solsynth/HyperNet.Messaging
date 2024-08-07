@@ -30,8 +30,9 @@ func newMessageEvent(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "message uuid was not valid")
 	}
 
+	data.Body.Text = strings.TrimSpace(data.Body.Text)
 	if len(data.Body.Text) == 0 && len(data.Body.Attachments) == 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "cannot send an empty message")
+		return fiber.NewError(fiber.StatusBadRequest, "empty message was not allowed")
 	}
 
 	var err error
@@ -51,13 +52,6 @@ func newMessageEvent(c *fiber.Ctx) error {
 	var parsed map[string]any
 	raw, _ := jsoniter.Marshal(data.Body)
 	_ = jsoniter.Unmarshal(raw, &parsed)
-
-	if val, ok := parsed["text"].(string); ok {
-		val = strings.TrimSpace(val)
-		parsed["text"] = val
-	} else if files, ok := parsed["attachments"].([]any); (!ok || len(files) == 0) && len(val) == 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "empty message was not allowed")
-	}
 
 	event := models.Event{
 		Uuid:      data.Uuid,
