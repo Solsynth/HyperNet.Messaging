@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.1
 
 require (
-	git.solsynth.dev/hydrogen/dealer v0.0.0-20240719153055-607eba001f65
+	git.solsynth.dev/hydrogen/dealer v0.0.0-20240817155242-38b52aec2fb0
 	git.solsynth.dev/hydrogen/paperclip v0.0.0-20240622051057-0f56dba45745
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gofiber/fiber/v2 v2.52.4

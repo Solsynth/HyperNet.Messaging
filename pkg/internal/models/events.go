@@ -24,10 +24,10 @@ type Event struct {
 // Event Payloads
 
 type EventMessageBody struct {
-	Text         string `json:"text,omitempty"`
-	Algorithm    string `json:"algorithm,omitempty"`
-	Attachments  []uint `json:"attachments,omitempty"`
-	QuoteEvent   uint   `json:"quote_event,omitempty"`
-	RelatedEvent uint   `json:"related_event,omitempty"`
-	RelatedUsers []uint `json:"related_users,omitempty"`
+	Text         string   `json:"text,omitempty"`
+	Algorithm    string   `json:"algorithm,omitempty"`
+	Attachments  []string `json:"attachments,omitempty"`
+	QuoteEvent   uint     `json:"quote_event,omitempty"`
+	RelatedEvent uint     `json:"related_event,omitempty"`
+	RelatedUsers []uint   `json:"related_users,omitempty"`
 }
