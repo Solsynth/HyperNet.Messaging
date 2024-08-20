@@ -45,16 +45,12 @@ func GetRealmWithAlias(alias string) (models.Realm, error) {
 }
 
 func GetRealmMember(realmId uint, userId uint) (*proto.RealmMemberInfo, error) {
-	var realm models.Realm
-	if err := database.C.Where("id = ?", realmId).First(&realm).Error; err != nil {
-		return nil, err
-	}
 	pc, err := gap.H.GetServiceGrpcConn(hyper.ServiceTypeAuthProvider)
 	if err != nil {
 		return nil, err
 	}
 	response, err := proto.NewRealmClient(pc).GetRealmMember(context.Background(), &proto.RealmMemberLookupRequest{
-		RealmId: uint64(realm.ExternalID),
+		RealmId: uint64(realmId),
 		UserId:  lo.ToPtr(uint64(userId)),
 	})
 	if err != nil {
