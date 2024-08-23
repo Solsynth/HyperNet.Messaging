@@ -18,7 +18,7 @@ func (v *Server) EmitStreamEvent(_ context.Context, in *proto.StreamEventRequest
 	switch in.GetEvent() {
 	case "status.typing":
 		var data struct {
-			ChannelID uint `json:"channel_id"`
+			ChannelID uint `json:"channel_id" validate:"required"`
 		}
 
 		err := jsoniter.Unmarshal(in.GetPayload(), &data)
@@ -26,7 +26,7 @@ func (v *Server) EmitStreamEvent(_ context.Context, in *proto.StreamEventRequest
 			err = exts.ValidateStruct(data)
 		}
 		if err != nil {
-			sc.PushStream(context.Background(), &proto.PushStreamRequest{
+			_, _ = sc.PushStream(context.Background(), &proto.PushStreamRequest{
 				ClientId: &in.ClientId,
 				Body: hyper.NetworkPackage{
 					Action:  "error",
@@ -37,7 +37,7 @@ func (v *Server) EmitStreamEvent(_ context.Context, in *proto.StreamEventRequest
 
 		err = services.SetTypingStatus(data.ChannelID, uint(in.GetUserId()))
 		if err != nil {
-			sc.PushStream(context.Background(), &proto.PushStreamRequest{
+			_, _ = sc.PushStream(context.Background(), &proto.PushStreamRequest{
 				ClientId: &in.ClientId,
 				Body: hyper.NetworkPackage{
 					Action:  "error",

@@ -13,13 +13,13 @@ import (
 
 func SetTypingStatus(channelId uint, userId uint) error {
 	var account models.Account
-	if err := database.C.Where("id = ?", userId).First(&account).Error; err != nil {
+	if err := database.C.Where("external_id = ?", userId).First(&account).Error; err != nil {
 		return fmt.Errorf("account not found: %v", err)
 	}
 
 	var member models.ChannelMember
 	if err := database.C.
-		Where("account_id = ? AND channel_id = ?", userId, channelId).
+		Where("account_id = ? AND channel_id = ?", account.ID, channelId).
 		First(&member).Error; err != nil {
 		return fmt.Errorf("channel member not found: %v", err)
 	} else {
@@ -34,17 +34,17 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		return fmt.Errorf("channel not found: %v", err)
 	}
 
-	var boardcastTarget []uint64
+	var broadcastTarget []uint64
 	for _, item := range channel.Members {
 		if item.AccountID == member.AccountID {
 			continue
 		}
-		boardcastTarget = append(boardcastTarget, uint64(item.AccountID))
+		broadcastTarget = append(broadcastTarget, uint64(item.AccountID))
 	}
 
 	sc := proto.NewStreamControllerClient(gap.H.GetDealerGrpcConn())
 	_, err := sc.PushStreamBatch(context.Background(), &proto.PushStreamBatchRequest{
-		UserId: boardcastTarget,
+		UserId: broadcastTarget,
 		Body: hyper.NetworkPackage{
 			Action: "status.typing",
 			Payload: map[string]any{
