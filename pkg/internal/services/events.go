@@ -85,7 +85,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 
 	event, _ = GetEvent(event.Channel, event.ID)
 	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
-		return uint64(item.AccountID)
+		return uint64(item.Account.ExternalID)
 	})
 	PushCommandBatch(idxList, models.UnifiedCommand{
 		Action:  "events.new",
@@ -106,7 +106,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	_ = jsoniter.Unmarshal(raw, &body)
 
 	var pendingUsers []models.Account
-	var metionedUsers []models.Account
+	var mentionedUsers []models.Account
 
 	for _, member := range members {
 		if member.ID != event.SenderID {
@@ -115,7 +115,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				continue
 			case models.NotifyLevelMentioned:
 				if len(body.RelatedUsers) != 0 && lo.Contains(body.RelatedUsers, member.Account.ExternalID) {
-					metionedUsers = append(metionedUsers, member.Account)
+					mentionedUsers = append(mentionedUsers, member.Account)
 				}
 				continue
 			default:
@@ -123,7 +123,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			}
 
 			if lo.Contains(body.RelatedUsers, member.Account.ExternalID) {
-				metionedUsers = append(metionedUsers, member.Account)
+				mentionedUsers = append(mentionedUsers, member.Account)
 			} else {
 				pendingUsers = append(pendingUsers, member.Account)
 			}
@@ -184,7 +184,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		}
 	}
 
-	if len(metionedUsers) > 0 {
+	if len(mentionedUsers) > 0 {
 		if displaySubtitle != nil && len(*displaySubtitle) > 0 {
 			*displaySubtitle += ", and metioned you"
 		} else {
@@ -192,7 +192,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		}
 
 		err := NotifyAccountMessagerBatch(
-			metionedUsers,
+			mentionedUsers,
 			&proto.NotifyRequest{
 				Topic:    "messaging.message",
 				Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
