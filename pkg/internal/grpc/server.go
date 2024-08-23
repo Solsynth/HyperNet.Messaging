@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"git.solsynth.dev/hydrogen/paperclip/pkg/proto"
+	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	health "google.golang.org/grpc/health/grpc_health_v1"
@@ -10,7 +10,7 @@ import (
 )
 
 type Server struct {
-	proto.UnimplementedAttachmentsServer
+	proto.UnimplementedStreamControllerServer
 }
 
 var S *grpc.Server
@@ -19,6 +19,7 @@ func NewGRPC() {
 	S = grpc.NewServer()
 
 	health.RegisterHealthServer(S, &Server{})
+	proto.RegisterStreamControllerServer(S, &Server{})
 
 	reflection.Register(S)
 }

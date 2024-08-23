@@ -16,3 +16,7 @@ func BindAndValidate(c *fiber.Ctx, out any) error {
 
 	return nil
 }
+
+func ValidateStruct(in any) error {
+	return validation.Struct(in)
+}
