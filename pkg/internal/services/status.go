@@ -13,9 +13,8 @@ import (
 )
 
 type statusQueryCacheEntry struct {
-	Account models.Account
-	Member  models.ChannelMember
-	Channel models.Channel
+	Target []uint64
+	Data   any
 }
 
 var statusQueryCacheLock sync.Mutex
@@ -24,21 +23,25 @@ var statusQueryCacheLock sync.Mutex
 var statusQueryCache = make(map[uint]map[uint]statusQueryCacheEntry)
 
 func SetTypingStatus(channelId uint, userId uint) error {
-	var account models.Account
-	var member models.ChannelMember
-	var channel models.Channel
+	var broadcastTarget []uint64
+	var data any
 
+	hitCache := false
 	if channelLevel, ok := statusQueryCache[channelId]; ok {
 		if entry, ok := channelLevel[userId]; ok {
-			account = entry.Account
-			member = entry.Member
-			channel = entry.Channel
+			broadcastTarget = entry.Target
+			data = entry.Data
+			hitCache = true
 		}
-	} else {
+	}
+
+	if !hitCache {
+		var account models.Account
 		if err := database.C.Where("external_id = ?", userId).First(&account).Error; err != nil {
 			return fmt.Errorf("account not found: %v", err)
 		}
 
+		var member models.ChannelMember
 		if err := database.C.
 			Where("account_id = ? AND channel_id = ?", account.ID, channelId).
 			First(&member).Error; err != nil {
@@ -47,6 +50,7 @@ func SetTypingStatus(channelId uint, userId uint) error {
 			member.Account = account
 		}
 
+		var channel models.Channel
 		if err := database.C.
 			Preload("Members").
 			Where("id = ?", channelId).
@@ -54,37 +58,44 @@ func SetTypingStatus(channelId uint, userId uint) error {
 			return fmt.Errorf("channel not found: %v", err)
 		}
 
+		for _, item := range channel.Members {
+			if item.AccountID == member.AccountID {
+				continue
+			}
+			broadcastTarget = append(broadcastTarget, uint64(item.AccountID))
+		}
+
+		data = map[string]any{
+			"user_id":    userId,
+			"member_id":  member.ID,
+			"channel_id": channelId,
+			"member":     member,
+			"channel":    channel,
+		}
+
 		// Cache queries
 		statusQueryCacheLock.Lock()
 		if _, ok := statusQueryCache[channelId]; !ok {
 			statusQueryCache[channelId] = make(map[uint]statusQueryCacheEntry)
 		}
-		statusQueryCache[channelId][userId] = statusQueryCacheEntry{account, member, channel}
+		statusQueryCache[channelId][userId] = statusQueryCacheEntry{broadcastTarget, data}
 		statusQueryCacheLock.Unlock()
-	}
-
-	var broadcastTarget []uint64
-	for _, item := range channel.Members {
-		if item.AccountID == member.AccountID {
-			continue
-		}
-		broadcastTarget = append(broadcastTarget, uint64(item.AccountID))
 	}
 
 	sc := proto.NewStreamControllerClient(gap.H.GetDealerGrpcConn())
 	_, err := sc.PushStreamBatch(context.Background(), &proto.PushStreamBatchRequest{
 		UserId: broadcastTarget,
 		Body: hyper.NetworkPackage{
-			Action: "status.typing",
-			Payload: map[string]any{
-				"user_id":    userId,
-				"member_id":  member.ID,
-				"channel_id": channelId,
-				"member":     member,
-				"channel":    channel,
-			},
+			Action:  "status.typing",
+			Payload: data,
 		}.Marshal(),
 	})
+
+	if len(statusQueryCache) > 512 {
+		statusQueryCacheLock.Lock()
+		clear(statusQueryCache)
+		statusQueryCacheLock.Unlock()
+	}
 
 	return err
 }
