@@ -59,9 +59,6 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		}
 
 		for _, item := range channel.Members {
-			if item.AccountID == member.AccountID {
-				continue
-			}
 			broadcastTarget = append(broadcastTarget, uint64(item.AccountID))
 		}
 
