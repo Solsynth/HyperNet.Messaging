@@ -53,13 +53,14 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		var channel models.Channel
 		if err := database.C.
 			Preload("Members").
+			Preload("Members.Account").
 			Where("id = ?", channelId).
 			First(&channel).Error; err != nil {
 			return fmt.Errorf("channel not found: %v", err)
 		}
 
 		for _, item := range channel.Members {
-			broadcastTarget = append(broadcastTarget, uint64(item.AccountID))
+			broadcastTarget = append(broadcastTarget, uint64(item.Account.ExternalID))
 		}
 
 		data = map[string]any{
