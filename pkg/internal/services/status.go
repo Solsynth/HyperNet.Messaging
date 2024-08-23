@@ -21,7 +21,7 @@ type statusQueryCacheEntry struct {
 var statusQueryCacheLock sync.Mutex
 
 // Map for caching typing status queries [channel id][user id]
-var statusQueryCache map[uint]map[uint]statusQueryCacheEntry
+var statusQueryCache = make(map[uint]map[uint]statusQueryCacheEntry)
 
 func SetTypingStatus(channelId uint, userId uint) error {
 	var account models.Account
