@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/samber/lo"
 	"time"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
@@ -15,7 +16,7 @@ func PushCommand(userId uint, task models.UnifiedCommand) {
 
 	pc := gap.H.GetDealerGrpcConn()
 	_, _ = proto.NewStreamControllerClient(pc).PushStream(ctx, &proto.PushStreamRequest{
-		UserId: uint64(userId),
+		UserId: lo.ToPtr(uint64(userId)),
 		Body:   task.Marshal(),
 	})
 }
