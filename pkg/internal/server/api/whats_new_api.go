@@ -27,16 +27,19 @@ func getWhatsNew(c *fiber.Ctx) error {
 	tx := database.C
 
 	var lookupRange []uint
+	var ignoreRange []uint
 	var channelMembers []models.ChannelMember
-	if err := database.C.Where("account_id = ?", user.ID).Select("channel_id").Find(&channelMembers).Error; err != nil {
+	if err := database.C.Where("account_id = ?", user.ID).Select("id", "channel_id").Find(&channelMembers).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("unable to get channel identity of you: %v", err))
 	} else {
 		for _, member := range channelMembers {
 			lookupRange = append(lookupRange, member.ChannelID)
+			ignoreRange = append(ignoreRange, member.ID)
 		}
 	}
 
 	tx = tx.Where("channel_id IN ?", lookupRange)
+	tx = tx.Where("sender_id NOT IN ?", ignoreRange)
 	tx = tx.Where("id > ?", pivot)
 
 	countTx := tx
