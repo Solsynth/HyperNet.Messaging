@@ -46,5 +46,7 @@ func MapAPIs(app *fiber.App, baseURL string) {
 			channels.Delete("/:channel/calls/ongoing/participant", kickParticipantInCall)
 			channels.Post("/:channel/calls/ongoing/token", exchangeCallToken)
 		}
+
+		api.Get("/whats-new", getWhatsNew)
 	}
 }
