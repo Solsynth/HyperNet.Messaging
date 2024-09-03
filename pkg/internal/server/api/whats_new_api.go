@@ -49,7 +49,7 @@ func getWhatsNew(c *fiber.Ctx) error {
 	}
 
 	var items []models.Event
-	if err := database.C.
+	if err := tx.
 		Limit(take).
 		Order("created_at DESC").
 		Preload("Sender").
