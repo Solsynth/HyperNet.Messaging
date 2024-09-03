@@ -52,6 +52,7 @@ func getWhatsNew(c *fiber.Ctx) error {
 		Order("created_at DESC").
 		Preload("Sender").
 		Preload("Sender.Account").
+		Preload("Channel").
 		Find(&items).Error; err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
