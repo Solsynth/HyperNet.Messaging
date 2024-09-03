@@ -50,12 +50,12 @@ func getWhatsNew(c *fiber.Ctx) error {
 
 	var items []models.Event
 	if err := database.C.
-		Where("channel_id IN ?", lookupRange).
 		Limit(take).
 		Order("created_at DESC").
 		Preload("Sender").
 		Preload("Sender.Account").
 		Preload("Channel").
+		Preload("Channel.Realm").
 		Find(&items).Error; err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
