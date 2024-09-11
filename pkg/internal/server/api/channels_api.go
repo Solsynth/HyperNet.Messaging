@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 
@@ -176,7 +178,7 @@ func editChannel(c *fiber.Ctx) error {
 		return err
 	}
 
-	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
+	tx := database.C.Where(&models.Channel{BaseModel: hyper.BaseModel{ID: uint(id)}})
 
 	if val, ok := c.Locals("realm").(models.Realm); ok {
 		if info, err := services.GetRealmMember(val.ExternalID, user.ID); err != nil {
@@ -218,7 +220,7 @@ func deleteChannel(c *fiber.Ctx) error {
 	user := c.Locals("user").(models.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
-	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
+	tx := database.C.Where(&models.Channel{BaseModel: hyper.BaseModel{ID: uint(id)}})
 
 	if val, ok := c.Locals("realm").(models.Realm); ok {
 		if info, err := services.GetRealmMember(val.ExternalID, user.ID); err != nil {

@@ -2,8 +2,9 @@ package grpc
 
 import (
 	"context"
-	health "google.golang.org/grpc/health/grpc_health_v1"
 	"time"
+
+	health "google.golang.org/grpc/health/grpc_health_v1"
 )
 
 func (v *Server) Check(ctx context.Context, request *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {

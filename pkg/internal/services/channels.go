@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"github.com/samber/lo"
@@ -21,7 +22,7 @@ func GetChannelAliasAvailability(alias string) error {
 func GetChannel(id uint) (models.Channel, error) {
 	var channel models.Channel
 	tx := database.C.Where(models.Channel{
-		BaseModel: models.BaseModel{ID: id},
+		BaseModel: hyper.BaseModel{ID: id},
 	}).Preload("Account").Preload("Realm")
 	tx = PreloadDirectChannelMembers(tx)
 	if err := tx.First(&channel).Error; err != nil {

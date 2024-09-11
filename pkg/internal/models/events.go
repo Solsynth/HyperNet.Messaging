@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/datatypes"
+import (
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+	"gorm.io/datatypes"
+)
 
 const (
 	EventMessageNew    = "messages.new"
@@ -10,7 +13,7 @@ const (
 )
 
 type Event struct {
-	BaseModel
+	hyper.BaseModel
 
 	Uuid      string            `json:"uuid"`
 	Body      datatypes.JSONMap `json:"body"`

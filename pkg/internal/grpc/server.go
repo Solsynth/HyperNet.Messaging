@@ -1,12 +1,13 @@
 package grpc
 
 import (
+	"net"
+
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	health "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-	"net"
 )
 
 type Server struct {

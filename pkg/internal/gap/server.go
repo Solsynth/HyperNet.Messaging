@@ -2,10 +2,11 @@ package gap
 
 import (
 	"fmt"
+	"strings"
+
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"github.com/rs/zerolog/log"
-	"strings"
 
 	"github.com/spf13/viper"
 )

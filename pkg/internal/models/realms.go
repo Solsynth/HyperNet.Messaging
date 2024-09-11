@@ -1,9 +1,11 @@
 package models
 
+import "git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+
 // Realm profiles basically fetched from Hydrogen.Passport
 // But cache at here for better usage and database relations
 type Realm struct {
-	BaseModel
+	hyper.BaseModel
 
 	Alias       string    `json:"alias"`
 	Name        string    `json:"name"`

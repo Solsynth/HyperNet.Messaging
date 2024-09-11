@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -47,7 +48,7 @@ func GetEvent(channel models.Channel, id uint) (models.Event, error) {
 	var event models.Event
 	if err := database.C.
 		Where(models.Event{
-			BaseModel: models.BaseModel{ID: id},
+			BaseModel: hyper.BaseModel{ID: id},
 			ChannelID: channel.ID,
 		}).
 		Preload("Sender").
@@ -62,7 +63,7 @@ func GetEvent(channel models.Channel, id uint) (models.Event, error) {
 func GetEventWithSender(channel models.Channel, member models.ChannelMember, id uint) (models.Event, error) {
 	var event models.Event
 	if err := database.C.Where(models.Event{
-		BaseModel: models.BaseModel{ID: id},
+		BaseModel: hyper.BaseModel{ID: id},
 		ChannelID: channel.ID,
 		SenderID:  member.ID,
 	}).First(&event).Error; err != nil {

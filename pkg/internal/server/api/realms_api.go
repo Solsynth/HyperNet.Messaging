@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
 )

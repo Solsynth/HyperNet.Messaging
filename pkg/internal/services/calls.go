@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -39,7 +40,7 @@ func GetCall(channel models.Channel, id uint) (models.Call, error) {
 	var call models.Call
 	if err := database.C.
 		Where(models.Call{
-			BaseModel: models.BaseModel{ID: id},
+			BaseModel: hyper.BaseModel{ID: id},
 			ChannelID: channel.ID,
 		}).
 		Preload("Founder").

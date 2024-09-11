@@ -1,12 +1,14 @@
 package models
 
 import (
-	"github.com/livekit/protocol/livekit"
 	"time"
+
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+	"github.com/livekit/protocol/livekit"
 )
 
 type Call struct {
-	BaseModel
+	hyper.BaseModel
 
 	EndedAt *time.Time `json:"ended_at"`
 

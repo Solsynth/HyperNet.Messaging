@@ -2,8 +2,9 @@ package services
 
 import (
 	"context"
-	"github.com/samber/lo"
 	"time"
+
+	"github.com/samber/lo"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"

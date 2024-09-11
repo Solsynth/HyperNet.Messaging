@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
@@ -11,7 +13,6 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
-	"reflect"
 )
 
 func GetRealmWithExtID(id uint) (models.Realm, error) {

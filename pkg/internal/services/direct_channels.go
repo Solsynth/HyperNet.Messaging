@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"github.com/spf13/viper"

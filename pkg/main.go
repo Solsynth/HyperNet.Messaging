@@ -1,18 +1,19 @@
 package main
 
 import (
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/grpc"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/grpc"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/robfig/cron/v3"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal"
+	pkg "git.solsynth.dev/hydrogen/messaging/pkg/internal"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+)
 
 type ChannelType = uint8
 
@@ -10,7 +14,7 @@ const (
 )
 
 type Channel struct {
-	BaseModel
+	hyper.BaseModel
 
 	Alias       string          `json:"alias"`
 	Name        string          `json:"name"`
@@ -46,7 +50,7 @@ const (
 )
 
 type ChannelMember struct {
-	BaseModel
+	hyper.BaseModel
 
 	ChannelID  uint        `json:"channel_id"`
 	AccountID  uint        `json:"account_id"`
