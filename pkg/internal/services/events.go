@@ -85,7 +85,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 
 	event, _ = GetEvent(event.Channel, event.ID)
 	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
-		return uint64(item.Account.ExternalID)
+		return uint64(item.Account.ID)
 	})
 	PushCommandBatch(idxList, models.UnifiedCommand{
 		Action:  "events.new",
@@ -114,7 +114,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			case models.NotifyLevelNone:
 				continue
 			case models.NotifyLevelMentioned:
-				if len(body.RelatedUsers) != 0 && lo.Contains(body.RelatedUsers, member.Account.ExternalID) {
+				if len(body.RelatedUsers) != 0 && lo.Contains(body.RelatedUsers, member.Account.ID) {
 					mentionedUsers = append(mentionedUsers, member.Account)
 				}
 				continue
@@ -122,7 +122,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				break
 			}
 
-			if lo.Contains(body.RelatedUsers, member.Account.ExternalID) {
+			if lo.Contains(body.RelatedUsers, member.Account.ID) {
 				mentionedUsers = append(mentionedUsers, member.Account)
 			} else {
 				pendingUsers = append(pendingUsers, member.Account)
@@ -170,7 +170,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				Body:     displayText,
 				Avatar:   &event.Sender.Account.Avatar,
 				Metadata: EncodeJSONBody(map[string]any{
-					"user_id":    event.Sender.Account.ExternalID,
+					"user_id":    event.Sender.Account.ID,
 					"user_name":  event.Sender.Account.Name,
 					"user_nick":  event.Sender.Account.Nick,
 					"channel_id": event.ChannelID,
@@ -200,7 +200,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				Body:     displayText,
 				Avatar:   &event.Sender.Account.Avatar,
 				Metadata: EncodeJSONBody(map[string]any{
-					"user_id":    event.Sender.Account.ExternalID,
+					"user_id":    event.Sender.Account.ID,
 					"user_name":  event.Sender.Account.Name,
 					"user_nick":  event.Sender.Account.Nick,
 					"channel_id": event.ChannelID,

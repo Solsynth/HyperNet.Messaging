@@ -60,7 +60,7 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		}
 
 		for _, item := range channel.Members {
-			broadcastTarget = append(broadcastTarget, uint64(item.Account.ExternalID))
+			broadcastTarget = append(broadcastTarget, uint64(item.Account.ID))
 		}
 
 		data = map[string]any{

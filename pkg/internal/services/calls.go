@@ -113,7 +113,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 			if member.ID != call.Founder.ID {
 				pendingUsers = append(pendingUsers, member.Account)
 			}
-			PushCommand(member.Account.ExternalID, models.UnifiedCommand{
+			PushCommand(member.Account.ID, models.UnifiedCommand{
 				Action:  "calls.new",
 				Payload: call,
 			})
@@ -129,7 +129,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 				Body:   fmt.Sprintf("%s is calling", call.Founder.Account.Name),
 				Avatar: &call.Founder.Account.Avatar,
 				Metadata: EncodeJSONBody(map[string]any{
-					"user_id":    call.Founder.Account.ExternalID,
+					"user_id":    call.Founder.Account.ID,
 					"user_name":  call.Founder.Account.Name,
 					"user_nick":  call.Founder.Account.Nick,
 					"channel_id": call.ChannelID,
@@ -163,7 +163,7 @@ func EndCall(call models.Call) (models.Call, error) {
 	}).Preload("Account").Find(&members).Error; err == nil {
 		call, _ = GetCall(call.Channel, call.ID)
 		for _, member := range members {
-			PushCommand(member.Account.ExternalID, models.UnifiedCommand{
+			PushCommand(member.Account.ID, models.UnifiedCommand{
 				Action:  "calls.end",
 				Payload: call,
 			})

@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+
+	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 
@@ -88,7 +90,7 @@ func addChannelMember(c *fiber.Ctx) error {
 	}
 
 	var account models.Account
-	if err := database.C.Where(&models.Account{
+	if err := database.C.Where(&hyper.BaseUser{
 		Name: data.Target,
 	}).First(&account).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
@@ -133,7 +135,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 
 	var account models.Account
-	if err := database.C.Where(&models.Account{
+	if err := database.C.Where(&hyper.BaseUser{
 		Name: data.Target,
 	}).First(&account).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
@@ -215,7 +217,7 @@ func joinChannel(c *fiber.Ctx) error {
 
 	if realm, err := services.GetRealmWithExtID(channel.Realm.ExternalID); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
-	} else if _, err := services.GetRealmMember(realm.ExternalID, user.ExternalID); err != nil {
+	} else if _, err := services.GetRealmMember(realm.ExternalID, user.ID); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
 	}
 

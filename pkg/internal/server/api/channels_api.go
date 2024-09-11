@@ -125,7 +125,7 @@ func createChannel(c *fiber.Ctx) error {
 
 	var realm *models.Realm
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ExternalID, user.ExternalID); err != nil {
+		if info, err := services.GetRealmMember(val.ExternalID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can create channel related to it")
 		} else if info.GetPowerLevel() < 50 {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can create channel related to it")
@@ -179,7 +179,7 @@ func editChannel(c *fiber.Ctx) error {
 	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
 
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ExternalID, user.ExternalID); err != nil {
+		if info, err := services.GetRealmMember(val.ExternalID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can edit channel related to it")
 		} else if info.GetPowerLevel() < 50 {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can edit channel related to it")
@@ -221,7 +221,7 @@ func deleteChannel(c *fiber.Ctx) error {
 	tx := database.C.Where(&models.Channel{BaseModel: models.BaseModel{ID: uint(id)}})
 
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ExternalID, user.ExternalID); err != nil {
+		if info, err := services.GetRealmMember(val.ExternalID, user.ID); err != nil {
 			return fmt.Errorf("you must be a part of that realm then can delete channel related to it")
 		} else if info.GetPowerLevel() < 50 {
 			return fmt.Errorf("you must be a moderator of that realm then can delete channel related to it")
