@@ -211,14 +211,16 @@ func joinChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err == nil {
 		return fiber.NewError(fiber.StatusBadRequest, "you already joined the channel")
-	} else if channel.RealmID == nil {
-		return fiber.NewError(fiber.StatusBadRequest, "you was impossible to join a channel without related realm")
+	} else if channel.RealmID == nil && !channel.IsCommunity {
+		return fiber.NewError(fiber.StatusBadRequest, "you were impossible to join a channel without related realm and non-community")
 	}
 
-	if realm, err := services.GetRealmWithExtID(channel.Realm.ExternalID); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
-	} else if _, err := services.GetRealmMember(realm.ExternalID, user.ID); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
+	if channel.RealmID != nil {
+		if realm, err := services.GetRealmWithExtID(channel.Realm.ExternalID); err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
+		} else if _, err := services.GetRealmMember(realm.ExternalID, user.ID); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
+		}
 	}
 
 	if err := services.AddChannelMember(user, channel); err != nil {

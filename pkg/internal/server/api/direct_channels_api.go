@@ -58,7 +58,8 @@ func createDirectChannel(c *fiber.Ctx) error {
 		Alias:       data.Alias,
 		Name:        data.Name,
 		Description: data.Description,
-		IsEncrypted: data.IsEncrypted,
+		IsPublic:    false,
+		IsCommunity: false,
 		AccountID:   user.ID,
 		Type:        models.ChannelTypeDirect,
 		Members: []models.ChannelMember{

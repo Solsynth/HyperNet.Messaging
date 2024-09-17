@@ -11,6 +11,7 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
+	"github.com/samber/lo"
 )
 
 func getChannel(c *fiber.Ctx) error {
@@ -52,12 +53,17 @@ func getChannelIdentity(c *fiber.Ctx) error {
 }
 
 func listChannel(c *fiber.Ctx) error {
+	var user *models.Account
+	if err := gap.H.EnsureAuthenticated(c); err == nil {
+		user = lo.ToPtr(c.Locals("user").(models.Account))
+	}
+
 	var err error
 	var channels []models.Channel
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		channels, err = services.ListChannel(val.ID)
+		channels, err = services.ListChannel(user, val.ID)
 	} else {
-		channels, err = services.ListChannel()
+		channels, err = services.ListChannel(user)
 	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
