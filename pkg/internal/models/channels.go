@@ -25,7 +25,8 @@ type Channel struct {
 	Type        ChannelType     `json:"type"`
 	Account     Account         `json:"account"`
 	AccountID   uint            `json:"account_id"`
-	IsEncrypted bool            `json:"is_encrypted"`
+	IsPublic    bool            `json:"is_public"`
+	IsCommunity bool            `json:"is_community"`
 
 	Realm   Realm `json:"realm"`
 	RealmID *uint `json:"realm_id"`

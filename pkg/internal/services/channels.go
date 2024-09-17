@@ -96,9 +96,21 @@ func PreloadDirectChannelMembers(tx *gorm.DB) *gorm.DB {
 	}).Preload("Members.Account")
 }
 
-func ListChannel(realmId ...uint) ([]models.Channel, error) {
+func ListChannel(user *models.Account, realmId ...uint) ([]models.Channel, error) {
+	var identities []models.ChannelMember
+	var idRange []uint
+	if user != nil {
+		if err := database.C.Where("account_id = ?", user.ID).Find(&identities).Error; err != nil {
+			return nil, fmt.Errorf("unabkle to get identities: %v", err)
+		}
+		for _, identity := range identities {
+			idRange = append(idRange, identity.ChannelID)
+		}
+	}
+
 	var channels []models.Channel
 	tx := database.C.Preload("Account").Preload("Realm")
+	tx = tx.Where("id IN ? OR is_public = true", idRange)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	}
@@ -160,13 +172,12 @@ func NewChannel(channel models.Channel) (models.Channel, error) {
 	return channel, err
 }
 
-func EditChannel(channel models.Channel, alias, name, description string, isEncrypted bool) (models.Channel, error) {
+func EditChannel(channel models.Channel, alias, name, description string, isPublic, isCommunity bool) (models.Channel, error) {
 	channel.Alias = alias
 	channel.Name = name
 	channel.Description = description
-	if !channel.IsEncrypted {
-		channel.IsEncrypted = isEncrypted
-	}
+	channel.IsPublic = isPublic
+	channel.IsCommunity = isCommunity
 
 	err := database.C.Save(&channel).Error
 

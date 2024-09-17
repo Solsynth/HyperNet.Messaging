@@ -116,7 +116,8 @@ func createChannel(c *fiber.Ctx) error {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
-		IsEncrypted bool   `json:"is_encrypted"`
+		IsPublic    bool   `json:"is_public"`
+		IsCommunity bool   `json:"is_community"`
 	}
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
@@ -140,9 +141,10 @@ func createChannel(c *fiber.Ctx) error {
 		Alias:       data.Alias,
 		Name:        data.Name,
 		Description: data.Description,
-		IsEncrypted: data.IsEncrypted,
 		AccountID:   user.ID,
 		Type:        models.ChannelTypeCommon,
+		IsPublic:    data.IsPublic,
+		IsCommunity: data.IsCommunity,
 		Members: []models.ChannelMember{
 			{AccountID: user.ID, PowerLevel: 100},
 		},
@@ -171,7 +173,8 @@ func editChannel(c *fiber.Ctx) error {
 		Alias       string `json:"alias" validate:"required,min=4,max=32"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
-		IsEncrypted bool   `json:"is_encrypted"`
+		IsPublic    bool   `json:"is_public"`
+		IsCommunity bool   `json:"is_community"`
 	}
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
@@ -205,7 +208,7 @@ func editChannel(c *fiber.Ctx) error {
 		}
 	}
 
-	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description, data.IsEncrypted)
+	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description, data.IsPublic, data.IsCommunity)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
