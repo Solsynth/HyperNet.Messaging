@@ -216,9 +216,9 @@ func joinChannel(c *fiber.Ctx) error {
 	}
 
 	if channel.RealmID != nil {
-		if realm, err := services.GetRealmWithExtID(channel.Realm.ExternalID); err != nil {
+		if realm, err := services.GetRealmWithExtID(channel.Realm.ID); err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
-		} else if _, err := services.GetRealmMember(realm.ExternalID, user.ID); err != nil {
+		} else if _, err := services.GetRealmMember(realm.ID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
 		}
 	}
