@@ -12,6 +12,7 @@ import (
 
 type Server struct {
 	proto.UnimplementedStreamControllerServer
+	proto.UnimplementedServiceDirectoryServer
 }
 
 var S *grpc.Server
@@ -21,6 +22,7 @@ func NewGRPC() {
 
 	health.RegisterHealthServer(S, &Server{})
 	proto.RegisterStreamControllerServer(S, &Server{})
+	proto.RegisterServiceDirectoryServer(S, &Server{})
 
 	reflection.Register(S)
 }
