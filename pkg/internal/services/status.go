@@ -3,13 +3,16 @@ package services
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
+	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/eko/gocache/lib/v4/marshaler"
+	"github.com/eko/gocache/lib/v4/store"
 )
 
 type statusQueryCacheEntry struct {
@@ -17,22 +20,24 @@ type statusQueryCacheEntry struct {
 	Data   any
 }
 
-var statusQueryCacheLock sync.Mutex
-
-// Map for caching typing status queries [channel id][user id]
-var statusQueryCache = make(map[uint]map[uint]statusQueryCacheEntry)
+func GetTypingStatusQueryCacheKey(channelId uint, userId uint) string {
+	return fmt.Sprintf("typing-status-query#%d;%d", channelId, userId)
+}
 
 func SetTypingStatus(channelId uint, userId uint) error {
 	var broadcastTarget []uint64
 	var data any
 
+	cacheManager := cache.New[any](localCache.S)
+	marshal := marshaler.New(cacheManager)
+	contx := context.Background()
+
 	hitCache := false
-	if channelLevel, ok := statusQueryCache[channelId]; ok {
-		if entry, ok := channelLevel[userId]; ok {
-			broadcastTarget = entry.Target
-			data = entry.Data
-			hitCache = true
-		}
+	if val, err := marshal.Get(contx, GetTypingStatusQueryCacheKey(channelId, userId), new(statusQueryCacheEntry)); err == nil {
+		entry := val.(statusQueryCacheEntry)
+		broadcastTarget = entry.Target
+		data = entry.Data
+		hitCache = true
 	}
 
 	if !hitCache {
@@ -72,12 +77,16 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		}
 
 		// Cache queries
-		statusQueryCacheLock.Lock()
-		if _, ok := statusQueryCache[channelId]; !ok {
-			statusQueryCache[channelId] = make(map[uint]statusQueryCacheEntry)
-		}
-		statusQueryCache[channelId][userId] = statusQueryCacheEntry{broadcastTarget, data}
-		statusQueryCacheLock.Unlock()
+		cacheManager := cache.New[any](localCache.S)
+		marshal := marshaler.New(cacheManager)
+		contx := context.Background()
+
+		marshal.Set(
+			contx,
+			GetTypingStatusQueryCacheKey(channelId, userId),
+			statusQueryCacheEntry{broadcastTarget, data},
+			store.WithTags([]string{"typing-status-query", fmt.Sprintf("channel#%d", channelId), fmt.Sprintf("user#%d", userId)}),
+		)
 	}
 
 	sc := proto.NewStreamControllerClient(gap.H.GetDealerGrpcConn())
@@ -88,12 +97,6 @@ func SetTypingStatus(channelId uint, userId uint) error {
 			Payload: data,
 		}.Marshal(),
 	})
-
-	if len(statusQueryCache) > 512 {
-		statusQueryCacheLock.Lock()
-		clear(statusQueryCache)
-		statusQueryCacheLock.Unlock()
-	}
 
 	return err
 }
