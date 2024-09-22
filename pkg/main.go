@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Initialize cache
-	if err := cache.NewCache(); err != nil {
+	if err := cache.NewStore(); err != nil {
 		log.Fatal().Err(err).Msg("An error occurred when initializing cache.")
 	}
 
