@@ -98,12 +98,20 @@ func listAvailableChannel(c *fiber.Ctx) error {
 	}
 	user := c.Locals("user").(models.Account)
 
+	tx := database.C
+	isDirect := c.QueryBool("direct", false)
+	if isDirect {
+		tx = tx.Where("type = ?", models.ChannelTypeDirect)
+	} else {
+		tx = tx.Where("type = ?", models.ChannelTypeCommon)
+	}
+
 	var err error
 	var channels []models.Channel
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		channels, err = services.ListAvailableChannel(user, val.ID)
+		channels, err = services.ListAvailableChannel(tx, user, val.ID)
 	} else {
-		channels, err = services.ListAvailableChannel(user)
+		channels, err = services.ListAvailableChannel(tx, user)
 	}
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())

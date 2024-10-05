@@ -140,7 +140,7 @@ func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel
 	return channels, nil
 }
 
-func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channel, error) {
+func ListAvailableChannel(tx *gorm.DB, user models.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
 	var members []models.ChannelMember
 	if err := database.C.Where(&models.ChannelMember{
@@ -153,7 +153,7 @@ func ListAvailableChannel(user models.Account, realmId ...uint) ([]models.Channe
 		return item.ChannelID
 	})
 
-	tx := database.C.Preload("Realm").Where("id IN ?", idx)
+	tx = tx.Preload("Realm").Where("id IN ?", idx)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	}
