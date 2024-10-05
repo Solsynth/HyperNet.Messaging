@@ -156,6 +156,8 @@ func ListAvailableChannel(tx *gorm.DB, user models.Account, realmId ...uint) ([]
 	tx = tx.Preload("Realm").Where("id IN ?", idx)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
+	} else {
+		tx = tx.Where("realm_id IS NULL")
 	}
 
 	tx = PreloadDirectChannelMembers(tx)
