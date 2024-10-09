@@ -1,7 +1,12 @@
 package services
 
 import (
+	"context"
 	"fmt"
+	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
+	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/eko/gocache/lib/v4/marshaler"
+	"github.com/eko/gocache/lib/v4/store"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -53,13 +58,41 @@ func AddChannelMember(user models.Account, target models.Channel) error {
 	}
 
 	err := database.C.Save(&member).Error
+
+	if err == nil {
+		cacheManager := cache.New[any](localCache.S)
+		marshal := marshaler.New(cacheManager)
+		contx := context.Background()
+
+		_ = marshal.Invalidate(
+			contx,
+			store.WithInvalidateTags([]string{
+				fmt.Sprintf("channel#%d", target.ID),
+				fmt.Sprintf("user#%d", user.ID),
+			}),
+		)
+	}
+
 	return err
 }
 
 func EditChannelMember(membership models.ChannelMember) (models.ChannelMember, error) {
 	if err := database.C.Save(&membership).Error; err != nil {
 		return membership, err
+	} else {
+		cacheManager := cache.New[any](localCache.S)
+		marshal := marshaler.New(cacheManager)
+		contx := context.Background()
+
+		_ = marshal.Invalidate(
+			contx,
+			store.WithInvalidateTags([]string{
+				fmt.Sprintf("channel#%d", membership.ChannelID),
+				fmt.Sprintf("user#%d", membership.AccountID),
+			}),
+		)
 	}
+
 	return membership, nil
 }
 
@@ -73,5 +106,23 @@ func RemoveChannelMember(user models.Account, target models.Channel) error {
 		return err
 	}
 
-	return database.C.Delete(&member).Error
+	if err := database.C.Delete(&member).Error; err == nil {
+		database.C.Where("sender_id = ?").Delete(&models.Event{})
+
+		cacheManager := cache.New[any](localCache.S)
+		marshal := marshaler.New(cacheManager)
+		contx := context.Background()
+
+		_ = marshal.Invalidate(
+			contx,
+			store.WithInvalidateTags([]string{
+				fmt.Sprintf("channel#%d", target.ID),
+				fmt.Sprintf("user#%d", user.ID),
+			}),
+		)
+
+		return nil
+	} else {
+		return err
+	}
 }

@@ -38,11 +38,13 @@ func newMessageEvent(c *fiber.Ctx) error {
 	var err error
 	var channel models.Channel
 	var member models.ChannelMember
+
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		channel, member, err = services.GetChannelIdentity(alias, user.ID)
 	}
+
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if member.PowerLevel < 0 {
@@ -95,11 +97,13 @@ func editMessageEvent(c *fiber.Ctx) error {
 	var err error
 	var channel models.Channel
 	var member models.ChannelMember
+
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		channel, member, err = services.GetChannelIdentity(alias, user.ID)
 	}
+
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
@@ -128,16 +132,15 @@ func deleteMessageEvent(c *fiber.Ctx) error {
 	var err error
 	var channel models.Channel
 	var member models.ChannelMember
+
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		}
+		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		}
+		channel, member, err = services.GetChannelIdentity(alias, user.ID)
+	}
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
 	var event models.Event

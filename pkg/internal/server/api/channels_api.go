@@ -40,11 +40,13 @@ func getChannelIdentity(c *fiber.Ctx) error {
 
 	var err error
 	var member models.ChannelMember
+
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		_, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
+		_, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
-		_, member, err = services.GetAvailableChannelWithAlias(alias, user)
+		_, member, err = services.GetChannelIdentity(alias, user.ID)
 	}
+
 	if err != nil {
 		return c.SendStatus(fiber.StatusForbidden)
 	}

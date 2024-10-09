@@ -95,20 +95,17 @@ func newRawEvent(c *fiber.Ctx) error {
 	var err error
 	var channel models.Channel
 	var member models.ChannelMember
+
 	if val, ok := c.Locals("realm").(models.Realm); ok {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user, val.ID)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		} else if member.PowerLevel < 0 {
-			return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
-		}
+		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
-		channel, member, err = services.GetAvailableChannelWithAlias(alias, user)
-		if err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		} else if member.PowerLevel < 0 {
-			return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
-		}
+		channel, member, err = services.GetChannelIdentity(alias, user.ID)
+	}
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if member.PowerLevel < 0 {
+		return fiber.NewError(fiber.StatusForbidden, "you have not enough permission to send message")
 	}
 
 	event := models.Event{

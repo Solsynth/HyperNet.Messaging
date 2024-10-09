@@ -34,7 +34,7 @@ func SetTypingStatus(channelId uint, userId uint) error {
 
 	hitCache := false
 	if val, err := marshal.Get(contx, GetTypingStatusQueryCacheKey(channelId, userId), new(statusQueryCacheEntry)); err == nil {
-		entry := val.(statusQueryCacheEntry)
+		entry := val.(*statusQueryCacheEntry)
 		broadcastTarget = entry.Target
 		data = entry.Data
 		hitCache = true
