@@ -2,15 +2,15 @@ package services
 
 import (
 	"fmt"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
 	"strings"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"

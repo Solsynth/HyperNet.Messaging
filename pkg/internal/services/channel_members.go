@@ -3,16 +3,16 @@ package services
 import (
 	"context"
 	"fmt"
-	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 )
 
 func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {

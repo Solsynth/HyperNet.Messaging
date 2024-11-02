@@ -5,8 +5,8 @@ import (
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 

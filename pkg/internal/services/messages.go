@@ -1,7 +1,7 @@
 package services
 
 import (
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 )

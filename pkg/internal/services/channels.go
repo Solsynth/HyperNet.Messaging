@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
-	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
+	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
@@ -11,8 +11,8 @@ import (
 	"regexp"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"

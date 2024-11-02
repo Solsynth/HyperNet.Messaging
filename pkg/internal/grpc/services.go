@@ -6,7 +6,7 @@ import (
 	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 	"strconv"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 )
 
 func (v *Server) BroadcastEvent(ctx context.Context, in *proto.EventInfo) (*proto.EventResponse, error) {

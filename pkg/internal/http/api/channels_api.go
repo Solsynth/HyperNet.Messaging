@@ -6,11 +6,11 @@ import (
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/samber/lo"
 )

@@ -8,17 +8,17 @@ import (
 	"os/signal"
 	"syscall"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/grpc"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/grpc"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"github.com/robfig/cron/v3"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/http"
 
-	pkg "git.solsynth.dev/hydrogen/messaging/pkg/internal"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
+	pkg "git.solsynth.dev/hypernet/messaging/pkg/internal"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"

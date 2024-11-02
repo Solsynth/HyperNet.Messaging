@@ -3,7 +3,7 @@ package services
 import (
 	"time"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"github.com/rs/zerolog/log"
 )
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 	jsoniter "github.com/json-iterator/go"
 )

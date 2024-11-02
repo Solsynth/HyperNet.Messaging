@@ -6,7 +6,7 @@ import (
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"time"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"github.com/samber/lo"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"

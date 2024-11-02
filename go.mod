@@ -1,4 +1,4 @@
-module git.solsynth.dev/hydrogen/messaging
+module git.solsynth.dev/hypernet/messaging
 
 go 1.23.2
 

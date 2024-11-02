@@ -1,7 +1,7 @@
 package database
 
 import (
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"gorm.io/gorm"
 )
 

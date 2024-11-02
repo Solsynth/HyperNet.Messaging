@@ -5,7 +5,7 @@ import (
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	"strings"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/api"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/idempotency"

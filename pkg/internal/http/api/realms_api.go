@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 

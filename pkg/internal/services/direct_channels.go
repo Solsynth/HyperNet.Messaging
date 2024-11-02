@@ -4,8 +4,8 @@ import (
 	"fmt"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 )
 
 func GetDirectChannelByUser(user authm.Account, other authm.Account) (models.Channel, error) {
