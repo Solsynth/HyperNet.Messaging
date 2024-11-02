@@ -3,12 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
@@ -50,7 +50,6 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		var channel models.Channel
 		if err := database.C.
 			Preload("Members").
-			Preload("Members.Account").
 			Where("id = ?", channelId).
 			First(&channel).Error; err != nil {
 			return fmt.Errorf("channel not found: %v", err)
@@ -77,10 +76,10 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		)
 	}
 
-	sc := proto.NewStreamControllerClient(gap.Nx.GetNexusGrpcConn())
+	sc := proto.NewStreamServiceClient(gap.Nx.GetNexusGrpcConn())
 	_, err := sc.PushStreamBatch(context.Background(), &proto.PushStreamBatchRequest{
 		UserId: broadcastTarget,
-		Body: hyper.NetworkPackage{
+		Body: nex.WebSocketPackage{
 			Action:  "status.typing",
 			Payload: data,
 		}.Marshal(),

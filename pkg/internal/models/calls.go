@@ -1,14 +1,13 @@
 package models
 
 import (
-	"time"
-
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"github.com/livekit/protocol/livekit"
+	"time"
 )
 
 type Call struct {
-	hyper.BaseModel
+	cruda.BaseModel
 
 	EndedAt *time.Time `json:"ended_at"`
 

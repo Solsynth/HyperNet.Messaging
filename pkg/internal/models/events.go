@@ -1,7 +1,7 @@
 package models
 
 import (
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"gorm.io/datatypes"
 )
 
@@ -13,7 +13,7 @@ const (
 )
 
 type Event struct {
-	hyper.BaseModel
+	cruda.BaseModel
 
 	Uuid      string            `json:"uuid"`
 	Body      datatypes.JSONMap `json:"body"`

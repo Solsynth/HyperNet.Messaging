@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
@@ -19,7 +20,7 @@ func listChannelMembers(c *fiber.Ctx) error {
 
 	var err error
 	var channel models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
 		channel, err = services.GetChannelWithAlias(alias)
@@ -44,7 +45,7 @@ func getMyChannelMembership(c *fiber.Ctx) error {
 
 	var err error
 	var channel models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
 		channel, err = services.GetChannelWithAlias(alias)
@@ -91,9 +92,7 @@ func addChannelMember(c *fiber.Ctx) error {
 	}
 
 	var account authm.Account
-	if err := database.C.Where(&hyper.BaseUser{
-		Name: data.Target,
-	}).First(&account).Error; err != nil {
+	if err := database.C.Where("name = ?", data.Target).First(&account).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
@@ -136,9 +135,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 
 	var account authm.Account
-	if err := database.C.Where(&hyper.BaseUser{
-		Name: data.Target,
-	}).First(&account).Error; err != nil {
+	if err := database.C.Where("name = ?", data.Target).First(&account).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
@@ -167,7 +164,7 @@ func editMyChannelMembership(c *fiber.Ctx) error {
 
 	var err error
 	var channel models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
 		channel, err = services.GetChannelWithAlias(alias)
@@ -218,9 +215,7 @@ func joinChannel(c *fiber.Ctx) error {
 	}
 
 	if channel.RealmID != nil {
-		if realm, err := services.GetRealmWithExtID(channel.Realm.ID); err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("invalid channel, related realm was not found: %v", err))
-		} else if _, err := services.GetRealmMember(realm.ID, user.ID); err != nil {
+		if _, err := authkit.GetRealmMember(gap.Nx, *channel.RealmID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
 		}
 	}

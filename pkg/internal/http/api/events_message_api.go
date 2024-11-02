@@ -40,7 +40,7 @@ func newMessageEvent(c *fiber.Ctx) error {
 	var channel models.Channel
 	var member models.ChannelMember
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID)
@@ -99,7 +99,7 @@ func editMessageEvent(c *fiber.Ctx) error {
 	var channel models.Channel
 	var member models.ChannelMember
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID)
@@ -134,7 +134,7 @@ func deleteMessageEvent(c *fiber.Ctx) error {
 	var channel models.Channel
 	var member models.ChannelMember
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID)

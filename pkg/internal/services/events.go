@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
 	"strings"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
@@ -39,7 +39,6 @@ func ListEvent(channel models.Channel, take int, offset int) ([]models.Event, er
 		}).Limit(take).Offset(offset).
 		Order("created_at DESC").
 		Preload("Sender").
-		Preload("Sender.Account").
 		Find(&events).Error; err != nil {
 		return events, err
 	} else {
@@ -50,12 +49,8 @@ func ListEvent(channel models.Channel, take int, offset int) ([]models.Event, er
 func GetEvent(channel models.Channel, id uint) (models.Event, error) {
 	var event models.Event
 	if err := database.C.
-		Where(models.Event{
-			BaseModel: hyper.BaseModel{ID: id},
-			ChannelID: channel.ID,
-		}).
+		Where("id = ? AND channel_id = ?", id, channel.ID).
 		Preload("Sender").
-		Preload("Sender.Account").
 		First(&event).Error; err != nil {
 		return event, err
 	} else {
@@ -66,7 +61,7 @@ func GetEvent(channel models.Channel, id uint) (models.Event, error) {
 func GetEventWithSender(channel models.Channel, member models.ChannelMember, id uint) (models.Event, error) {
 	var event models.Event
 	if err := database.C.Where(models.Event{
-		BaseModel: hyper.BaseModel{ID: id},
+		BaseModel: cruda.BaseModel{ID: id},
 		ChannelID: channel.ID,
 		SenderID:  member.ID,
 	}).First(&event).Error; err != nil {
@@ -98,6 +93,12 @@ func NewEvent(event models.Event) (models.Event, error) {
 
 	if strings.HasPrefix(event.Type, "messages") {
 		event.Channel, _ = GetChannel(event.ChannelID)
+		if event.Channel.RealmID == nil {
+			realm, err := authkit.GetRealm(gap.Nx, *event.Channel.RealmID)
+			if err == nil {
+				event.Channel.Realm = &realm
+			}
+		}
 		NotifyMessageEvent(members, event)
 	}
 

@@ -2,7 +2,9 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
@@ -33,11 +35,11 @@ func createDirectChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	var realm *models.Realm
-	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ID, user.ID); err != nil {
+	var realm *authm.Realm
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		if info, err := authkit.GetRealmMember(gap.Nx, val.ID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can create channel related to it")
-		} else if info.GetPowerLevel() < 50 {
+		} else if info.PowerLevel < 50 {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can create channel related to it")
 		} else {
 			realm = &val

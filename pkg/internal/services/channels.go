@@ -10,7 +10,6 @@ import (
 	"github.com/eko/gocache/lib/v4/store"
 	"regexp"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"github.com/samber/lo"
@@ -46,7 +45,7 @@ func CacheChannelIdentityCache(channel models.Channel, member models.ChannelMemb
 	)
 }
 
-func GetChannelIdentity(alias string, user uint, realm ...models.Realm) (models.Channel, models.ChannelMember, error) {
+func GetChannelIdentity(alias string, user uint, realm ...authm.Realm) (models.Channel, models.ChannelMember, error) {
 	cacheManager := cache.New[any](localCache.S)
 	marshal := marshaler.New(cacheManager)
 	contx := context.Background()
@@ -93,9 +92,7 @@ func GetChannelAliasAvailability(alias string) error {
 
 func GetChannel(id uint) (models.Channel, error) {
 	var channel models.Channel
-	tx := database.C.Where(models.Channel{
-		BaseModel: hyper.BaseModel{ID: id},
-	}).Preload("Account").Preload("Realm")
+	tx := database.C.Where("id = ?", id).Preload("Account").Preload("Realm")
 	tx = PreloadDirectChannelMembers(tx)
 	if err := tx.First(&channel).Error; err != nil {
 		return channel, err
@@ -165,7 +162,7 @@ func PreloadDirectChannelMembers(tx *gorm.DB) *gorm.DB {
 			),
 			models.ChannelTypeDirect,
 		)
-	}).Preload("Members.Account")
+	})
 }
 
 func ListChannel(user *authm.Account, realmId ...uint) ([]models.Channel, error) {

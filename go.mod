@@ -3,7 +3,6 @@ module git.solsynth.dev/hypernet/messaging
 go 1.23.2
 
 require (
-	git.solsynth.dev/hydrogen/dealer v0.0.0-20240919131945-00c52eba6827
 	git.solsynth.dev/hypernet/nexus v0.0.0-20241031133156-6bb8eab3fcd8
 	git.solsynth.dev/hypernet/passport v0.0.0-20241102044832-40a040352174
 	git.solsynth.dev/hypernet/pusher v0.0.0-20241026153052-cd2c326efa4e
@@ -14,7 +13,6 @@ require (
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/google/uuid v1.6.0
-	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/livekit/protocol v1.14.0
 	github.com/livekit/server-sdk-go v1.1.8

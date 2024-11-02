@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
 	"time"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
@@ -30,7 +30,6 @@ func ListCall(channel models.Channel, take, offset int) ([]models.Call, error) {
 		Limit(take).
 		Offset(offset).
 		Preload("Founder").
-		Preload("Founder.Account").
 		Preload("Channel").
 		Order("created_at DESC").
 		Find(&calls).Error; err != nil {
@@ -44,11 +43,10 @@ func GetCall(channel models.Channel, id uint) (models.Call, error) {
 	var call models.Call
 	if err := database.C.
 		Where(models.Call{
-			BaseModel: hyper.BaseModel{ID: id},
+			BaseModel: cruda.BaseModel{ID: id},
 			ChannelID: channel.ID,
 		}).
 		Preload("Founder").
-		Preload("Founder.Account").
 		Preload("Channel").
 		Order("created_at DESC").
 		First(&call).Error; err != nil {
@@ -125,6 +123,12 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		}
 
 		channel, _ = GetChannel(channel.ID)
+		if channel.RealmID == nil {
+			realm, err := authkit.GetRealm(gap.Nx, *channel.RealmID)
+			if err == nil {
+				channel.Realm = &realm
+			}
+		}
 
 		err = authkit.NotifyUserBatch(
 			gap.Nx,

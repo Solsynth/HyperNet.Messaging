@@ -21,7 +21,7 @@ func getEvent(c *fiber.Ctx) error {
 
 	var err error
 	var channel models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
 		channel, err = services.GetChannelWithAlias(alias)
@@ -51,7 +51,7 @@ func listEvent(c *fiber.Ctx) error {
 
 	var err error
 	var channel models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
 		channel, err = services.GetChannelWithAlias(alias)
@@ -97,7 +97,7 @@ func newRawEvent(c *fiber.Ctx) error {
 	var channel models.Channel
 	var member models.ChannelMember
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
 		channel, member, err = services.GetChannelIdentity(alias, user.ID)

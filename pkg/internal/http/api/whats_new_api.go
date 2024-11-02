@@ -55,7 +55,6 @@ func getWhatsNew(c *fiber.Ctx) error {
 		Limit(take).
 		Order("created_at DESC").
 		Preload("Sender").
-		Preload("Sender.Account").
 		Preload("Channel").
 		Preload("Channel.Realm").
 		Find(&items).Error; err != nil {

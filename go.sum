@@ -1,11 +1,7 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-git.solsynth.dev/hydrogen/dealer v0.0.0-20240919131945-00c52eba6827 h1:1ACMPm2ArRpVNYrND/y/R6oPiuMfKe49fP+lG3mcNug=
-git.solsynth.dev/hydrogen/dealer v0.0.0-20240919131945-00c52eba6827/go.mod h1:Q51JPkKnV0UoOT/IRmdBh5CyfSlp7s8BRGzgooYHqkI=
 git.solsynth.dev/hypernet/nexus v0.0.0-20241031133156-6bb8eab3fcd8 h1:fo9WuAXcmxdGfYXZKTiAbqGLHAkeL7vf0zpwbjoUNc0=
 git.solsynth.dev/hypernet/nexus v0.0.0-20241031133156-6bb8eab3fcd8/go.mod h1:fXQsHXGio+7/0U95IitKF07wS4yTdCMp5ms8wpFBwVI=
-git.solsynth.dev/hypernet/passport v0.0.0-20241031144010-d1f1183beb36 h1:rzDuXRTCbWJOgfT7bG0cWFcYqbWKnI1aEfiovpXfsdM=
-git.solsynth.dev/hypernet/passport v0.0.0-20241031144010-d1f1183beb36/go.mod h1:EjUDX5HdTo3J1GfAN5mfDf0JxRspzASj8uysa4V/ow0=
 git.solsynth.dev/hypernet/passport v0.0.0-20241102044832-40a040352174 h1:XplLpEeQOFlZR2/A4YIeh0B/g9//pXg/TXtWrvHDops=
 git.solsynth.dev/hypernet/passport v0.0.0-20241102044832-40a040352174/go.mod h1:EjUDX5HdTo3J1GfAN5mfDf0JxRspzASj8uysa4V/ow0=
 git.solsynth.dev/hypernet/pusher v0.0.0-20241026153052-cd2c326efa4e h1:DtHhMjgxS/spUt/KEdbRFtaVnepI6Vx8pbHdJaNH1hs=
@@ -210,8 +206,6 @@ github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
 github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
-github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible h1:jdpOPRN1zP63Td1hDQbZW73xKmzDvZHzVdNYxhnTMDA=
-github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible/go.mod h1:1c7szIrayyPPB/987hsnvNzLushdWf4o/79s3P08L8A=
 github.com/jpillora/backoff v1.0.0 h1:uvFg412JmmHBHw7iwprIxkPMI+sGQ4kzOWsMeHnm2EA=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=

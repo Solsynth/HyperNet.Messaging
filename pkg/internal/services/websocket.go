@@ -7,8 +7,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 )
 
 func PushCommand(userId uint, task nex.WebSocketPackage) {
@@ -16,7 +16,7 @@ func PushCommand(userId uint, task nex.WebSocketPackage) {
 	defer cancel()
 
 	pc := gap.Nx.GetNexusGrpcConn()
-	_, _ = proto.NewStreamControllerClient(pc).PushStream(ctx, &proto.PushStreamRequest{
+	_, _ = proto.NewStreamServiceClient(pc).PushStream(ctx, &proto.PushStreamRequest{
 		UserId: lo.ToPtr(uint64(userId)),
 		Body:   task.Marshal(),
 	})
@@ -27,7 +27,7 @@ func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) {
 	defer cancel()
 
 	pc := gap.Nx.GetNexusGrpcConn()
-	_, _ = proto.NewStreamControllerClient(pc).PushStreamBatch(ctx, &proto.PushStreamBatchRequest{
+	_, _ = proto.NewStreamServiceClient(pc).PushStreamBatch(ctx, &proto.PushStreamBatchRequest{
 		UserId: userId,
 		Body:   task.Marshal(),
 	})

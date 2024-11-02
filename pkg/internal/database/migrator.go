@@ -2,11 +2,12 @@ package database
 
 import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"gorm.io/gorm"
 )
 
 var AutoMaintainRange = []any{
-	&models.Realm{},
+	&authm.Realm{},
 	&models.Channel{},
 	&models.ChannelMember{},
 	&models.Call{},

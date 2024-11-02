@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
@@ -20,7 +21,7 @@ func getChannel(c *fiber.Ctx) error {
 
 	var err error
 	var channel models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
 		channel, err = services.GetChannelWithAlias(alias)
@@ -42,7 +43,7 @@ func getChannelIdentity(c *fiber.Ctx) error {
 	var err error
 	var member models.ChannelMember
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		_, member, err = services.GetChannelIdentity(alias, user.ID, val)
 	} else {
 		_, member, err = services.GetChannelIdentity(alias, user.ID)
@@ -63,7 +64,7 @@ func listChannel(c *fiber.Ctx) error {
 
 	var err error
 	var channels []models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channels, err = services.ListChannel(user, val.ID)
 	} else {
 		channels, err = services.ListChannel(user)
@@ -83,7 +84,7 @@ func listOwnedChannel(c *fiber.Ctx) error {
 
 	var err error
 	var channels []models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channels, err = services.ListChannelWithUser(user, val.ID)
 	} else {
 		channels, err = services.ListChannelWithUser(user)
@@ -111,7 +112,7 @@ func listAvailableChannel(c *fiber.Ctx) error {
 
 	var err error
 	var channels []models.Channel
-	if val, ok := c.Locals("realm").(models.Realm); ok {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
 		channels, err = services.ListAvailableChannel(tx, user, val.ID)
 	} else {
 		channels, err = services.ListAvailableChannel(tx, user)
@@ -143,11 +144,11 @@ func createChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	var realm *models.Realm
-	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ID, user.ID); err != nil {
+	var realm *authm.Realm
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		if info, err := authkit.GetRealmMember(gap.Nx, val.ID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can create channel related to it")
-		} else if info.GetPowerLevel() < 50 {
+		} else if info.PowerLevel < 50 {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can create channel related to it")
 		} else {
 			realm = &val
@@ -198,12 +199,12 @@ func editChannel(c *fiber.Ctx) error {
 		return err
 	}
 
-	tx := database.C.Where(&models.Channel{BaseModel: hyper.BaseModel{ID: uint(id)}})
+	tx := database.C.Where("id = ?", id)
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ID, user.ID); err != nil {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		if info, err := authkit.GetRealmMember(gap.Nx, val.ID, user.ID); err != nil {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can edit channel related to it")
-		} else if info.GetPowerLevel() < 50 {
+		} else if info.PowerLevel < 50 {
 			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can edit channel related to it")
 		} else {
 			tx = tx.Where("realm_id = ?", val.ID)
@@ -240,12 +241,12 @@ func deleteChannel(c *fiber.Ctx) error {
 	user := c.Locals("user").(authm.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
-	tx := database.C.Where(&models.Channel{BaseModel: hyper.BaseModel{ID: uint(id)}})
+	tx := database.C.Where("id = ?", id)
 
-	if val, ok := c.Locals("realm").(models.Realm); ok {
-		if info, err := services.GetRealmMember(val.ID, user.ID); err != nil {
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		if info, err := authkit.GetRealmMember(gap.Nx, val.ID, user.ID); err != nil {
 			return fmt.Errorf("you must be a part of that realm then can delete channel related to it")
-		} else if info.GetPowerLevel() < 50 {
+		} else if info.PowerLevel < 50 {
 			return fmt.Errorf("you must be a moderator of that realm then can delete channel related to it")
 		} else {
 			tx = tx.Where("realm_id = ?", val.ID)

@@ -2,8 +2,8 @@ package models
 
 import (
 	"fmt"
-
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 )
 
 type ChannelType = uint8
@@ -14,7 +14,7 @@ const (
 )
 
 type Channel struct {
-	hyper.BaseModel
+	cruda.BaseModel
 
 	Alias       string          `json:"alias"`
 	Name        string          `json:"name"`
@@ -27,8 +27,8 @@ type Channel struct {
 	IsPublic    bool            `json:"is_public"`
 	IsCommunity bool            `json:"is_community"`
 
-	Realm   Realm `json:"realm"`
-	RealmID *uint `json:"realm_id"`
+	Realm   *authm.Realm `json:"realm" gorm:"-"`
+	RealmID *uint        `json:"realm_id"`
 }
 
 func (v Channel) DisplayText() string {
@@ -50,7 +50,7 @@ const (
 )
 
 type ChannelMember struct {
-	hyper.BaseModel
+	cruda.BaseModel
 
 	Name   string  `json:"name"`
 	Nick   string  `json:"nick"`
