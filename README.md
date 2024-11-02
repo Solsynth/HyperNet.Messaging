@@ -1,3 +1,3 @@
-# Hydrogen.Messaging
+# Hypernet.Messaging
 
-The instant message service in Hydrogen universe.
+The instant message service in Hypernet universe.

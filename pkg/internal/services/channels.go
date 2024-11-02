@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
@@ -137,7 +138,7 @@ func GetAvailableChannelWithAlias(alias string, user uint, realmId ...uint) (mod
 	return channel, member, nil
 }
 
-func GetAvailableChannel(id uint, user models.Account) (models.Channel, models.ChannelMember, error) {
+func GetAvailableChannel(id uint, user authm.Account) (models.Channel, models.ChannelMember, error) {
 	var err error
 	var member models.ChannelMember
 	var channel models.Channel
@@ -167,7 +168,7 @@ func PreloadDirectChannelMembers(tx *gorm.DB) *gorm.DB {
 	}).Preload("Members.Account")
 }
 
-func ListChannel(user *models.Account, realmId ...uint) ([]models.Channel, error) {
+func ListChannel(user *authm.Account, realmId ...uint) ([]models.Channel, error) {
 	var identities []models.ChannelMember
 	var idRange []uint
 	if user != nil {
@@ -195,7 +196,7 @@ func ListChannel(user *models.Account, realmId ...uint) ([]models.Channel, error
 	return channels, nil
 }
 
-func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel, error) {
+func ListChannelWithUser(user authm.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
 	tx := database.C.Where(&models.Channel{AccountID: user.ID}).Preload("Realm")
 	if len(realmId) > 0 {
@@ -211,7 +212,7 @@ func ListChannelWithUser(user models.Account, realmId ...uint) ([]models.Channel
 	return channels, nil
 }
 
-func ListAvailableChannel(tx *gorm.DB, user models.Account, realmId ...uint) ([]models.Channel, error) {
+func ListAvailableChannel(tx *gorm.DB, user authm.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
 	var members []models.ChannelMember
 	if err := database.C.Where(&models.ChannelMember{

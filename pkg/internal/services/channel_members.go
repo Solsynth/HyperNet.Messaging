@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/passport/pkg/authkit"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
@@ -25,7 +28,7 @@ func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
 	return members, nil
 }
 
-func GetChannelMember(user models.Account, channelId uint) (models.ChannelMember, error) {
+func GetChannelMember(user authm.Account, channelId uint) (models.ChannelMember, error) {
 	var member models.ChannelMember
 
 	if err := database.C.
@@ -37,9 +40,9 @@ func GetChannelMember(user models.Account, channelId uint) (models.ChannelMember
 	return member, nil
 }
 
-func AddChannelMemberWithCheck(user models.Account, target models.Channel) error {
-	if err := CheckUserPerm(user.ID, target.AccountID, "ChannelAdd", true); err != nil {
-		return fmt.Errorf("unable to add user into your channel")
+func AddChannelMemberWithCheck(user authm.Account, target models.Channel) error {
+	if err := authkit.EnsureUserPermGranted(gap.Nx, user.ID, target.AccountID, "ChannelAdd", true); err != nil {
+		return fmt.Errorf("unable to add user into your channel due to access denied: %v", err)
 	}
 
 	member := models.ChannelMember{
@@ -51,7 +54,7 @@ func AddChannelMemberWithCheck(user models.Account, target models.Channel) error
 	return err
 }
 
-func AddChannelMember(user models.Account, target models.Channel) error {
+func AddChannelMember(user authm.Account, target models.Channel) error {
 	member := models.ChannelMember{
 		ChannelID: target.ID,
 		AccountID: user.ID,
@@ -96,7 +99,7 @@ func EditChannelMember(membership models.ChannelMember) (models.ChannelMember, e
 	return membership, nil
 }
 
-func RemoveChannelMember(user models.Account, target models.Channel) error {
+func RemoveChannelMember(user authm.Account, target models.Channel) error {
 	var member models.ChannelMember
 
 	if err := database.C.Where(&models.ChannelMember{

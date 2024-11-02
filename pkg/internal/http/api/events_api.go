@@ -2,19 +2,20 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
 func getEvent(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 	id, _ := c.ParamsInt("eventId")
 
@@ -40,10 +41,10 @@ func getEvent(c *fiber.Ctx) error {
 }
 
 func listEvent(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	take := c.QueryInt("take", 0)
 	offset := c.QueryInt("offset", 0)
 	alias := c.Params("channel")
@@ -74,10 +75,10 @@ func listEvent(c *fiber.Ctx) error {
 }
 
 func newRawEvent(c *fiber.Ctx) error {
-	if err := gap.H.EnsureGrantedPerm(c, "CreateMessagingRawEvent", true); err != nil {
+	if err := sec.EnsureGrantedPerm(c, "CreateMessagingRawEvent", true); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var data struct {

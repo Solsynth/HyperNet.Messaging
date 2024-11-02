@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -32,10 +33,10 @@ func getChannel(c *fiber.Ctx) error {
 }
 
 func getChannelIdentity(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var err error
@@ -55,9 +56,9 @@ func getChannelIdentity(c *fiber.Ctx) error {
 }
 
 func listChannel(c *fiber.Ctx) error {
-	var user *models.Account
-	if err := gap.H.EnsureAuthenticated(c); err == nil {
-		user = lo.ToPtr(c.Locals("user").(models.Account))
+	var user *authm.Account
+	if err := sec.EnsureAuthenticated(c); err == nil {
+		user = lo.ToPtr(c.Locals("user").(authm.Account))
 	}
 
 	var err error
@@ -75,10 +76,10 @@ func listChannel(c *fiber.Ctx) error {
 }
 
 func listOwnedChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 
 	var err error
 	var channels []models.Channel
@@ -95,10 +96,10 @@ func listOwnedChannel(c *fiber.Ctx) error {
 }
 
 func listAvailableChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 
 	tx := database.C
 	isDirect := c.QueryBool("direct", false)
@@ -123,10 +124,10 @@ func listAvailableChannel(c *fiber.Ctx) error {
 }
 
 func createChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureGrantedPerm(c, "CreateChannels", true); err != nil {
+	if err := sec.EnsureGrantedPerm(c, "CreateChannels", true); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 
 	var data struct {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
@@ -179,10 +180,10 @@ func createChannel(c *fiber.Ctx) error {
 }
 
 func editChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
 	var data struct {
@@ -233,10 +234,10 @@ func editChannel(c *fiber.Ctx) error {
 }
 
 func deleteChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	id, _ := c.ParamsInt("channelId", 0)
 
 	tx := database.C.Where(&models.Channel{BaseModel: hyper.BaseModel{ID: uint(id)}})

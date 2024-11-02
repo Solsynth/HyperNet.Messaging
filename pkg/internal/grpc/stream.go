@@ -3,43 +3,48 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 
-	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
+	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (v *Server) EmitStreamEvent(_ context.Context, in *proto.StreamEventRequest) (*proto.StreamEventResponse, error) {
-	sc := proto.NewStreamControllerClient(gap.H.GetDealerGrpcConn())
+func (v *Server) PushStream(_ context.Context, request *proto.PushStreamRequest) (*proto.PushStreamResponse, error) {
+	sc := proto.NewStreamServiceClient(gap.Nx.GetNexusGrpcConn())
 
-	switch in.GetEvent() {
+	var in nex.WebSocketPackage
+	if err := jsoniter.Unmarshal(request.GetBody(), &in); err != nil {
+		return nil, err
+	}
+
+	switch in.Action {
 	case "status.typing":
 		var data struct {
 			ChannelID uint `json:"channel_id" validate:"required"`
 		}
 
-		err := jsoniter.Unmarshal(in.GetPayload(), &data)
+		err := jsoniter.Unmarshal(in.RawPayload(), &data)
 		if err == nil {
 			err = exts.ValidateStruct(data)
 		}
 		if err != nil {
 			_, _ = sc.PushStream(context.Background(), &proto.PushStreamRequest{
-				ClientId: &in.ClientId,
-				Body: hyper.NetworkPackage{
+				ClientId: request.ClientId,
+				Body: nex.WebSocketPackage{
 					Action:  "error",
 					Message: fmt.Sprintf("unable parse payload: %v", err),
 				}.Marshal(),
 			})
 		}
 
-		err = services.SetTypingStatus(data.ChannelID, uint(in.GetUserId()))
+		err = services.SetTypingStatus(data.ChannelID, uint(request.GetUserId()))
 		if err != nil {
 			_, _ = sc.PushStream(context.Background(), &proto.PushStreamRequest{
-				ClientId: &in.ClientId,
-				Body: hyper.NetworkPackage{
+				ClientId: request.ClientId,
+				Body: nex.WebSocketPackage{
 					Action:  "error",
 					Message: fmt.Sprintf("unable boardcast status: %v", err),
 				}.Marshal(),
@@ -47,5 +52,5 @@ func (v *Server) EmitStreamEvent(_ context.Context, in *proto.StreamEventRequest
 		}
 	}
 
-	return &proto.StreamEventResponse{}, nil
+	return &proto.PushStreamResponse{}, nil
 }

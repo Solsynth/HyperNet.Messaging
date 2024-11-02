@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	localCache "git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
@@ -41,18 +40,11 @@ func SetTypingStatus(channelId uint, userId uint) error {
 	}
 
 	if !hitCache {
-		var account models.Account
-		if err := database.C.Where("external_id = ?", userId).First(&account).Error; err != nil {
-			return fmt.Errorf("account not found: %v", err)
-		}
-
 		var member models.ChannelMember
 		if err := database.C.
-			Where("account_id = ? AND channel_id = ?", account.ID, channelId).
+			Where("account_id = ? AND channel_id = ?", userId, channelId).
 			First(&member).Error; err != nil {
 			return fmt.Errorf("channel member not found: %v", err)
-		} else {
-			member.Account = account
 		}
 
 		var channel models.Channel
@@ -65,7 +57,7 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		}
 
 		for _, item := range channel.Members {
-			broadcastTarget = append(broadcastTarget, uint64(item.Account.ID))
+			broadcastTarget = append(broadcastTarget, uint64(item.AccountID))
 		}
 
 		data = map[string]any{
@@ -77,11 +69,7 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		}
 
 		// Cache queries
-		cacheManager := cache.New[any](localCache.S)
-		marshal := marshaler.New(cacheManager)
-		contx := context.Background()
-
-		marshal.Set(
+		_ = marshal.Set(
 			contx,
 			GetTypingStatusQueryCacheKey(channelId, userId),
 			statusQueryCacheEntry{broadcastTarget, data},
@@ -89,7 +77,7 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		)
 	}
 
-	sc := proto.NewStreamControllerClient(gap.H.GetDealerGrpcConn())
+	sc := proto.NewStreamControllerClient(gap.Nx.GetNexusGrpcConn())
 	_, err := sc.PushStreamBatch(context.Background(), &proto.PushStreamBatchRequest{
 		UserId: broadcastTarget,
 		Body: hyper.NetworkPackage{

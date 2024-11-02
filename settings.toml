@@ -1,14 +1,9 @@
 id = "messaging01"
 
-frontend = "https://lian.solsynth.dev"
-
 bind = "0.0.0.0:8447"
 grpc_bind = "0.0.0.0:7447"
-domain = "im.solsynth.dev"
-secret = "LtTjzAGFLshwXhN4ZD4nG5KlMv1MWcsvfv03TSZYnT1VhiAnLIZFTnHUwR0XhGgi"
 
-[dealer]
-addr = "127.0.0.1:7442"
+nexus_addr = "localhost:7001"
 
 [debug]
 database = false
@@ -22,19 +17,5 @@ token_duration = 43200
 empty_timeout_duration = 600
 max_participants = 20
 
-[mailer]
-name = "Alphabot <alphabot@smartsheep.studio>"
-smtp_host = "smtp.exmail.qq.com"
-smtp_port = 465
-username = "alphabot@smartsheep.studio"
-password = "gz937Zxxzfcd9SeH"
-
 [security]
-cookie_domain = "localhost"
-cookie_samesite = "Lax"
-access_token_duration = 300
-refresh_token_duration = 2592000
-
-[database]
-dsn = "host=localhost user=postgres password=password dbname=hy_messaging port=5432 sslmode=disable"
-prefix = "messaging_"
+internal_public_key = "keys/internal_public_key.pem"

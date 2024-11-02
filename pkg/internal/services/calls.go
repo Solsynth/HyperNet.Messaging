@@ -4,10 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"git.solsynth.dev/hypernet/passport/pkg/authkit"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
+	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
 	"time"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
@@ -109,12 +113,12 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		ChannelID: call.ChannelID,
 	}).Preload("Account").Find(&members).Error; err == nil {
 		call, _ = GetCall(call.Channel, call.ID)
-		var pendingUsers []models.Account
+		var pendingUsers []uint64
 		for _, member := range members {
 			if member.ID != call.Founder.ID {
-				pendingUsers = append(pendingUsers, member.Account)
+				pendingUsers = append(pendingUsers, uint64(member.AccountID))
 			}
-			PushCommand(member.Account.ID, models.UnifiedCommand{
+			PushCommand(member.AccountID, nex.WebSocketPackage{
 				Action:  "calls.new",
 				Payload: call,
 			})
@@ -122,21 +126,21 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 
 		channel, _ = GetChannel(channel.ID)
 
-		err = NotifyAccountMessagerBatch(
+		err = authkit.NotifyUserBatch(
+			gap.Nx,
 			pendingUsers,
-			&proto.NotifyRequest{
-				Topic:  "messaging.callStart",
-				Title:  fmt.Sprintf("Call in (%s)", channel.DisplayText()),
-				Body:   fmt.Sprintf("%s is calling", call.Founder.Account.Name),
-				Avatar: &call.Founder.Account.Avatar,
-				Metadata: EncodeJSONBody(map[string]any{
-					"user_id":    call.Founder.Account.ID,
-					"user_name":  call.Founder.Account.Name,
-					"user_nick":  call.Founder.Account.Nick,
+			pushkit.Notification{
+				Topic: "messaging.callStart",
+				Title: fmt.Sprintf("Call in (%s)", channel.DisplayText()),
+				Body:  fmt.Sprintf("%s is calling", call.Founder.Name),
+				Metadata: map[string]any{
+					"avatar":     call.Founder.Avatar,
+					"user_id":    call.Founder.AccountID,
+					"user_name":  call.Founder.Name,
+					"user_nick":  call.Founder.Nick,
 					"channel_id": call.ChannelID,
-				}),
-				IsRealtime:  false,
-				IsForcePush: true,
+				},
+				Priority: 5,
 			},
 		)
 		if err != nil {
@@ -164,7 +168,7 @@ func EndCall(call models.Call) (models.Call, error) {
 	}).Preload("Account").Find(&members).Error; err == nil {
 		call, _ = GetCall(call.Channel, call.ID)
 		for _, member := range members {
-			PushCommand(member.Account.ID, models.UnifiedCommand{
+			PushCommand(member.AccountID, nex.WebSocketPackage{
 				Action:  "calls.end",
 				Payload: call,
 			})
@@ -182,7 +186,7 @@ func KickParticipantInCall(call models.Call, username string) error {
 	return err
 }
 
-func EncodeCallToken(user models.Account, call models.Call) (string, error) {
+func EncodeCallToken(user authm.Account, call models.Call) (string, error) {
 	isAdmin := user.ID == call.FounderID || user.ID == call.Channel.AccountID
 
 	grant := &auth.VideoGrant{

@@ -2,18 +2,19 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 
 func getWhatsNew(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 
 	pivot := c.QueryInt("pivot", 0)
 	if pivot < 0 {

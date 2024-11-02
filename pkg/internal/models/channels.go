@@ -23,7 +23,6 @@ type Channel struct {
 	Messages    []Event         `json:"messages"`
 	Calls       []Call          `json:"calls"`
 	Type        ChannelType     `json:"type"`
-	Account     Account         `json:"account"`
 	AccountID   uint            `json:"account_id"`
 	IsPublic    bool            `json:"is_public"`
 	IsCommunity bool            `json:"is_community"`
@@ -53,11 +52,13 @@ const (
 type ChannelMember struct {
 	hyper.BaseModel
 
+	Name   string  `json:"name"`
+	Nick   string  `json:"nick"`
+	Avatar *string `json:"avatar"`
+
 	ChannelID  uint        `json:"channel_id"`
 	AccountID  uint        `json:"account_id"`
-	Nick       *string     `json:"nick"`
 	Channel    Channel     `json:"channel"`
-	Account    Account     `json:"account"`
 	Notify     NotifyLevel `json:"notify"`
 	PowerLevel int         `json:"power_level"`
 

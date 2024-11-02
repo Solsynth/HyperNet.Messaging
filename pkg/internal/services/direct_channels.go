@@ -2,15 +2,15 @@ package services
 
 import (
 	"fmt"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
-	"github.com/spf13/viper"
 )
 
-func GetDirectChannelByUser(user models.Account, other models.Account) (models.Channel, error) {
-	memberTable := fmt.Sprintf("%schannel_members", viper.GetString("database.prefix"))
-	channelTable := fmt.Sprintf("%schannels", viper.GetString("database.prefix"))
+func GetDirectChannelByUser(user authm.Account, other authm.Account) (models.Channel, error) {
+	memberTable := "channel_members"
+	channelTable := "channels"
 
 	var channel models.Channel
 	if err := database.C.Preload("Members").

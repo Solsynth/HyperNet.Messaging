@@ -7,9 +7,6 @@ import (
 func MapAPIs(app *fiber.App, baseURL string) {
 	api := app.Group(baseURL).Name("API")
 	{
-		api.Get("/users/me", getUserinfo)
-		api.Get("/users/:accountId", getOthersInfo)
-
 		channels := api.Group("/channels/:realm").Use(realmMiddleware).Name("Channels API")
 		{
 			channels.Get("/", listChannel)

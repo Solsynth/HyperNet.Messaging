@@ -2,9 +2,10 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -13,10 +14,10 @@ import (
 )
 
 func createDirectChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 
 	var data struct {
 		Alias       string `json:"alias" validate:"required,lowercase,min=4,max=32"`
@@ -43,7 +44,7 @@ func createDirectChannel(c *fiber.Ctx) error {
 		}
 	}
 
-	var relatedUser models.Account
+	var relatedUser authm.Account
 	if err := database.C.
 		Where("external_id = ?", data.RelatedUser).
 		First(&relatedUser).Error; err != nil {

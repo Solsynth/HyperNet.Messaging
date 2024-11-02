@@ -2,10 +2,13 @@ package services
 
 import (
 	"fmt"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"git.solsynth.dev/hypernet/passport/pkg/authkit"
+	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
 	"strings"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
 	jsoniter "github.com/json-iterator/go"
@@ -86,9 +89,9 @@ func NewEvent(event models.Event) (models.Event, error) {
 
 	event, _ = GetEvent(event.Channel, event.ID)
 	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
-		return uint64(item.Account.ID)
+		return uint64(item.AccountID)
 	})
-	PushCommandBatch(idxList, models.UnifiedCommand{
+	PushCommandBatch(idxList, nex.WebSocketPackage{
 		Action:  "events.new",
 		Payload: event,
 	})
@@ -106,8 +109,8 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	raw, _ := jsoniter.Marshal(event.Body)
 	_ = jsoniter.Unmarshal(raw, &body)
 
-	var pendingUsers []models.Account
-	var mentionedUsers []models.Account
+	var pendingUsers []uint64
+	var mentionedUsers []uint64
 
 	for _, member := range members {
 		if member.ID != event.SenderID {
@@ -115,31 +118,31 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			case models.NotifyLevelNone:
 				continue
 			case models.NotifyLevelMentioned:
-				if len(body.RelatedUsers) != 0 && lo.Contains(body.RelatedUsers, member.Account.ID) {
-					mentionedUsers = append(mentionedUsers, member.Account)
+				if len(body.RelatedUsers) != 0 && lo.Contains(body.RelatedUsers, member.AccountID) {
+					mentionedUsers = append(mentionedUsers, uint64(member.AccountID))
 				}
 				continue
 			default:
 				break
 			}
 
-			if lo.Contains(body.RelatedUsers, member.Account.ID) {
-				mentionedUsers = append(mentionedUsers, member.Account)
+			if lo.Contains(body.RelatedUsers, member.AccountID) {
+				mentionedUsers = append(mentionedUsers, uint64(member.AccountID))
 			} else {
-				pendingUsers = append(pendingUsers, member.Account)
+				pendingUsers = append(pendingUsers, uint64(member.AccountID))
 			}
 		}
 	}
 
 	var displayText string
-	var displaySubtitle *string
+	var displaySubtitle string
 	switch event.Type {
 	case models.EventMessageNew:
 		if body.Algorithm == "plain" {
 			displayText = body.Text
 		}
 	case models.EventMessageEdit:
-		displaySubtitle = lo.ToPtr("Edited a message")
+		displaySubtitle = "Edited a message"
 		if body.Algorithm == "plain" {
 			displayText = body.Text
 		}
@@ -162,22 +165,22 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	if len(pendingUsers) > 0 {
-		err := NotifyAccountMessagerBatch(
+		err := authkit.NotifyUserBatch(
+			gap.Nx,
 			pendingUsers,
-			&proto.NotifyRequest{
+			pushkit.Notification{
 				Topic:    "messaging.message",
-				Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
+				Title:    fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText()),
 				Subtitle: displaySubtitle,
 				Body:     displayText,
-				Avatar:   &event.Sender.Account.Avatar,
-				Metadata: EncodeJSONBody(map[string]any{
-					"user_id":    event.Sender.Account.ID,
-					"user_name":  event.Sender.Account.Name,
-					"user_nick":  event.Sender.Account.Nick,
+				Metadata: map[string]any{
+					"avatar":     event.Sender.Avatar,
+					"user_id":    event.Sender.AccountID,
+					"user_name":  event.Sender.Name,
+					"user_nick":  event.Sender.Nick,
 					"channel_id": event.ChannelID,
-				}),
-				IsRealtime:  true,
-				IsForcePush: false,
+				},
+				Priority: 5,
 			},
 		)
 		if err != nil {
@@ -186,28 +189,28 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	if len(mentionedUsers) > 0 {
-		if displaySubtitle != nil && len(*displaySubtitle) > 0 {
-			*displaySubtitle += ", and metioned you"
+		if len(displaySubtitle) > 0 {
+			displaySubtitle += ", and mentioned you"
 		} else {
-			displaySubtitle = lo.ToPtr("Metioned you")
+			displaySubtitle = "Mentioned you"
 		}
 
-		err := NotifyAccountMessagerBatch(
+		err := authkit.NotifyUserBatch(
+			gap.Nx,
 			mentionedUsers,
-			&proto.NotifyRequest{
+			pushkit.Notification{
 				Topic:    "messaging.message",
-				Title:    fmt.Sprintf("%s (%s)", event.Sender.Account.Nick, event.Channel.DisplayText()),
+				Title:    fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText()),
 				Subtitle: displaySubtitle,
 				Body:     displayText,
-				Avatar:   &event.Sender.Account.Avatar,
-				Metadata: EncodeJSONBody(map[string]any{
-					"user_id":    event.Sender.Account.ID,
-					"user_name":  event.Sender.Account.Name,
-					"user_nick":  event.Sender.Account.Nick,
+				Metadata: map[string]any{
+					"avatar":     event.Sender.Avatar,
+					"user_id":    event.Sender.AccountID,
+					"user_name":  event.Sender.Name,
+					"user_nick":  event.Sender.Nick,
 					"channel_id": event.ChannelID,
-				}),
-				IsRealtime:  true,
-				IsForcePush: false,
+				},
+				Priority: 5,
 			},
 		)
 		if err != nil {

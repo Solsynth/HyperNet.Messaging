@@ -1,12 +1,13 @@
 package api
 
 import (
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"sync"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -55,10 +56,10 @@ func getOngoingCall(c *fiber.Ctx) error {
 }
 
 func startCall(c *fiber.Ctx) error {
-	if err := gap.H.EnsureGrantedPerm(c, "CreateCalls", true); err != nil {
+	if err := sec.EnsureGrantedPerm(c, "CreateCalls", true); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -105,10 +106,10 @@ func startCall(c *fiber.Ctx) error {
 }
 
 func endCall(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -151,10 +152,10 @@ func endCall(c *fiber.Ctx) error {
 }
 
 func kickParticipantInCall(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -193,10 +194,10 @@ func kickParticipantInCall(c *fiber.Ctx) error {
 }
 
 func exchangeCallToken(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel

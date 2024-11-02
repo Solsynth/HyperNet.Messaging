@@ -1,21 +1,22 @@
 package api
 
 import (
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"strings"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
 	jsoniter "github.com/json-iterator/go"
 )
 
 func newMessageEvent(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -73,10 +74,10 @@ func newMessageEvent(c *fiber.Ctx) error {
 }
 
 func editMessageEvent(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 
@@ -122,10 +123,10 @@ func editMessageEvent(c *fiber.Ctx) error {
 }
 
 func deleteMessageEvent(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 	messageId, _ := c.ParamsInt("messageId", 0)
 

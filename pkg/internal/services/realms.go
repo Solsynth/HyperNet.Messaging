@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
 	"git.solsynth.dev/hydrogen/dealer/pkg/proto"
@@ -14,7 +15,7 @@ import (
 
 func GetRealmWithExtID(id uint) (models.Realm, error) {
 	var realm models.Realm
-	pc, err := gap.H.GetServiceGrpcConn(hyper.ServiceTypeAuthProvider)
+	pc, err := gap.Nx.GetClientGrpcConn(nex.ServiceTypeAuth)
 	if err != nil {
 		return realm, err
 	}
@@ -31,7 +32,7 @@ func GetRealmWithExtID(id uint) (models.Realm, error) {
 
 func GetRealmWithAlias(alias string) (models.Realm, error) {
 	var realm models.Realm
-	pc, err := gap.H.GetServiceGrpcConn(hyper.ServiceTypeAuthProvider)
+	pc, err := gap.Nx.GetClientGrpcConn(nex.ServiceTypeAuth)
 	if err != nil {
 		return realm, err
 	}
@@ -47,7 +48,7 @@ func GetRealmWithAlias(alias string) (models.Realm, error) {
 }
 
 func GetRealmMember(realmId uint, userId uint) (*proto.RealmMemberInfo, error) {
-	pc, err := gap.H.GetServiceGrpcConn(hyper.ServiceTypeAuthProvider)
+	pc, err := gap.Nx.GetClientGrpcConn(nex.ServiceTypeAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +64,7 @@ func GetRealmMember(realmId uint, userId uint) (*proto.RealmMemberInfo, error) {
 }
 
 func ListRealmMember(realmId uint) ([]*proto.RealmMemberInfo, error) {
-	pc, err := gap.H.GetServiceGrpcConn(hyper.ServiceTypeAuthProvider)
+	pc, err := gap.Nx.GetClientGrpcConn(nex.ServiceTypeAuth)
 	if err != nil {
 		return nil, err
 	}

@@ -2,10 +2,11 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
 	"git.solsynth.dev/hydrogen/dealer/pkg/hyper"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server/exts"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http/exts"
 
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/database"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/models"
@@ -36,10 +37,10 @@ func listChannelMembers(c *fiber.Ctx) error {
 
 func getMyChannelMembership(c *fiber.Ctx) error {
 	alias := c.Params("channel")
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 
 	var err error
 	var channel models.Channel
@@ -60,10 +61,10 @@ func getMyChannelMembership(c *fiber.Ctx) error {
 }
 
 func addChannelMember(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -89,7 +90,7 @@ func addChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to add member into it")
 	}
 
-	var account models.Account
+	var account authm.Account
 	if err := database.C.Where(&hyper.BaseUser{
 		Name: data.Target,
 	}).First(&account).Error; err != nil {
@@ -104,10 +105,10 @@ func addChannelMember(c *fiber.Ctx) error {
 }
 
 func removeChannelMember(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -134,7 +135,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member into it")
 	}
 
-	var account models.Account
+	var account authm.Account
 	if err := database.C.Where(&hyper.BaseUser{
 		Name: data.Target,
 	}).First(&account).Error; err != nil {
@@ -149,10 +150,10 @@ func removeChannelMember(c *fiber.Ctx) error {
 }
 
 func editMyChannelMembership(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var data struct {
@@ -183,11 +184,12 @@ func editMyChannelMembership(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
+	membership.Name = user.Name
 	membership.Notify = data.NotifyLevel
 	if len(data.Nick) > 0 {
-		membership.Nick = &data.Nick
+		membership.Nick = data.Nick
 	} else {
-		membership.Nick = nil
+		membership.Nick = user.Nick
 	}
 
 	if membership, err := services.EditChannelMember(membership); err != nil {
@@ -198,10 +200,10 @@ func editMyChannelMembership(c *fiber.Ctx) error {
 }
 
 func joinChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel
@@ -231,10 +233,10 @@ func joinChannel(c *fiber.Ctx) error {
 }
 
 func leaveChannel(c *fiber.Ctx) error {
-	if err := gap.H.EnsureAuthenticated(c); err != nil {
+	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
-	user := c.Locals("user").(models.Account)
+	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
 
 	var channel models.Channel

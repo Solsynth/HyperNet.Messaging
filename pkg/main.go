@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	"github.com/fatih/color"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,7 +14,7 @@ import (
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/services"
 	"github.com/robfig/cron/v3"
 
-	"git.solsynth.dev/hydrogen/messaging/pkg/internal/server"
+	"git.solsynth.dev/hydrogen/messaging/pkg/internal/http"
 
 	pkg "git.solsynth.dev/hydrogen/messaging/pkg/internal"
 	"git.solsynth.dev/hydrogen/messaging/pkg/internal/cache"
@@ -27,6 +30,12 @@ func init() {
 }
 
 func main() {
+	// Booting screen
+	fmt.Println(color.YellowString(" __  __                           _\n|  \\/  | ___  ___ ___  __ _  __ _(_)_ __   __ _\n| |\\/| |/ _ \\/ __/ __|/ _` |/ _` | | '_ \\ / _` |\n| |  | |  __/\\__ \\__ \\ (_| | (_| | | | | | (_| |\n|_|  |_|\\___||___/___/\\__,_|\\__, |_|_| |_|\\__, |\n                            |___/         |___/"))
+	fmt.Printf("%s v%s\n", color.New(color.FgHiYellow).Add(color.Bold).Sprintf("Hypernet.Messaging"), pkg.AppVersion)
+	fmt.Printf("The instant messaging service in Hypernet\n")
+	color.HiBlack("=====================================================\n")
+
 	// Configure settings
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("..")
@@ -38,8 +47,21 @@ func main() {
 		log.Panic().Err(err).Msg("An error occurred when loading settings.")
 	}
 
+	// Connect to nexus
+	if err := gap.InitializeToNexus(); err != nil {
+		log.Fatal().Err(err).Msg("An error occurred when connecting to nexus...")
+	}
+
+	// Load keypair
+	if reader, err := sec.NewInternalTokenReader(viper.GetString("security.internal_public_key")); err != nil {
+		log.Error().Err(err).Msg("An error occurred when reading internal public key for jwt. Authentication related features will be disabled.")
+	} else {
+		http.IReader = reader
+		log.Info().Msg("Internal jwt public key loaded.")
+	}
+
 	// Connect to database
-	if err := database.NewSource(); err != nil {
+	if err := database.NewGorm(); err != nil {
 		log.Fatal().Err(err).Msg("An error occurred when connect to database.")
 	} else if err := database.RunMigration(database.C); err != nil {
 		log.Fatal().Err(err).Msg("An error occurred when running database auto migration.")
@@ -51,17 +73,12 @@ func main() {
 	}
 
 	// Connect other services
-	if err := gap.RegisterService(); err != nil {
-		log.Fatal().Err(err).Msg("An error occurred when connecting to consul...")
-	}
 	services.SetupLiveKit()
 
 	// Server
-	server.NewServer()
-	go server.Listen()
+	go http.NewServer().Listen()
 
-	grpc.NewGRPC()
-	go grpc.ListenGRPC()
+	go grpc.NewGrpc().Listen()
 
 	// Configure timed tasks
 	quartz := cron.New(cron.WithLogger(cron.VerbosePrintfLogger(&log.Logger)))
@@ -69,13 +86,9 @@ func main() {
 	quartz.Start()
 
 	// Messages
-	log.Info().Msgf("Messaging v%s is started...", pkg.AppVersion)
-
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-
-	log.Info().Msgf("Messaging v%s is quitting...", pkg.AppVersion)
 
 	quartz.Stop()
 }
