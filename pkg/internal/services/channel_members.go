@@ -20,7 +20,6 @@ func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
 
 	if err := database.C.
 		Where(&models.ChannelMember{ChannelID: channelId}).
-		Preload("Account").
 		Find(&members).Error; err != nil {
 		return members, err
 	}

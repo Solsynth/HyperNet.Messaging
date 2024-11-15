@@ -77,7 +77,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 		return event, err
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: event.ChannelID,
-	}).Preload("Account").Find(&members).Error; err != nil {
+	}).Find(&members).Error; err != nil {
 		// Couldn't get channel members, skip notifying
 		return event, nil
 	}

@@ -109,7 +109,7 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		return call, err
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: call.ChannelID,
-	}).Preload("Account").Find(&members).Error; err == nil {
+	}).Find(&members).Error; err == nil {
 		call, _ = GetCall(call.Channel, call.ID)
 		var pendingUsers []uint64
 		for _, member := range members {
@@ -169,7 +169,7 @@ func EndCall(call models.Call) (models.Call, error) {
 		return call, err
 	} else if err = database.C.Where(models.ChannelMember{
 		ChannelID: call.ChannelID,
-	}).Preload("Account").Find(&members).Error; err == nil {
+	}).Find(&members).Error; err == nil {
 		call, _ = GetCall(call.Channel, call.ID)
 		for _, member := range members {
 			PushCommand(member.AccountID, nex.WebSocketPackage{
