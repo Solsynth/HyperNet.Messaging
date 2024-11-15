@@ -92,7 +92,7 @@ func GetChannelAliasAvailability(alias string) error {
 
 func GetChannel(id uint) (models.Channel, error) {
 	var channel models.Channel
-	tx := database.C.Where("id = ?", id).Preload("Realm")
+	tx := database.C.Where("id = ?", id)
 	tx = PreloadDirectChannelMembers(tx)
 	if err := tx.First(&channel).Error; err != nil {
 		return channel, err
@@ -103,7 +103,7 @@ func GetChannel(id uint) (models.Channel, error) {
 
 func GetChannelWithAlias(alias string, realmId ...uint) (models.Channel, error) {
 	var channel models.Channel
-	tx := database.C.Where(models.Channel{Alias: alias}).Preload("Realm")
+	tx := database.C.Where(models.Channel{Alias: alias})
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	} else {
@@ -178,7 +178,7 @@ func ListChannel(user *authm.Account, realmId ...uint) ([]models.Channel, error)
 	}
 
 	var channels []models.Channel
-	tx := database.C.Preload("Realm")
+	tx := database.C
 	tx = tx.Where("id IN ? OR is_public = true", idRange)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
@@ -195,7 +195,7 @@ func ListChannel(user *authm.Account, realmId ...uint) ([]models.Channel, error)
 
 func ListChannelWithUser(user authm.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
-	tx := database.C.Where(&models.Channel{AccountID: user.ID}).Preload("Realm")
+	tx := database.C.Where(&models.Channel{AccountID: user.ID})
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	}
@@ -222,7 +222,7 @@ func ListAvailableChannel(tx *gorm.DB, user authm.Account, realmId ...uint) ([]m
 		return item.ChannelID
 	})
 
-	tx = tx.Preload("Realm").Where("id IN ?", idx)
+	tx = tx.Where("id IN ?", idx)
 	if len(realmId) > 0 {
 		tx = tx.Where("realm_id = ?", realmId)
 	} else {

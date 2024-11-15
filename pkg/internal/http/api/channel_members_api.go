@@ -206,7 +206,7 @@ func joinChannel(c *fiber.Ctx) error {
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
 		Alias: alias,
-	}).Preload("Realm").First(&channel).Error; err != nil {
+	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err == nil {
 		return fiber.NewError(fiber.StatusBadRequest, "you already joined the channel")
