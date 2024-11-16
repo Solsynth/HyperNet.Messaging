@@ -2,8 +2,10 @@ package api
 
 import (
 	"fmt"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
+	"github.com/samber/lo"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
@@ -72,6 +74,45 @@ func listEvent(c *fiber.Ctx) error {
 		"count": count,
 		"data":  events,
 	})
+}
+
+func checkHasNewEvent(c *fiber.Ctx) error {
+	if err := sec.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(authm.Account)
+	pivot := c.QueryInt("pivot", 0)
+	alias := c.Params("channel")
+
+	if pivot < 1 {
+		return fiber.NewError(fiber.StatusBadRequest, "pivot must be greater than zero")
+	}
+
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err != nil {
+		return fiber.NewError(fiber.StatusForbidden, fmt.Sprintf("you need join the channel before you read the messages: %v", err))
+	}
+
+	var count int64
+	if err = database.C.
+		Where("channel_id = ?", channel.ID).
+		Where("id > ?", pivot).
+		Model(&models.Event{}).Count(&count).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	} else {
+		return c.JSON(fiber.Map{
+			"up_to_date": lo.Ternary(count > 0, false, true),
+			"count":      count,
+		})
+	}
 }
 
 func newRawEvent(c *fiber.Ctx) error {

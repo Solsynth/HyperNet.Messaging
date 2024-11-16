@@ -29,6 +29,7 @@ func MapAPIs(app *fiber.App, baseURL string) {
 			channels.Delete("/:channel/members/me", leaveChannel)
 
 			channels.Get("/:channel/events", listEvent)
+			channels.Get("/:channel/events/update", checkHasNewEvent)
 			channels.Get("/:channel/events/:eventId", getEvent)
 			channels.Post("/:channel/events", newRawEvent)
 
