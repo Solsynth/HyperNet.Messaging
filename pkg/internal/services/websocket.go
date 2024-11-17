@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"github.com/rs/zerolog/log"
 	"time"
 
 	"github.com/samber/lo"
@@ -16,10 +17,14 @@ func PushCommand(userId uint, task nex.WebSocketPackage) {
 	defer cancel()
 
 	pc := gap.Nx.GetNexusGrpcConn()
-	_, _ = proto.NewStreamServiceClient(pc).PushStream(ctx, &proto.PushStreamRequest{
+	_, err := proto.NewStreamServiceClient(pc).PushStream(ctx, &proto.PushStreamRequest{
 		UserId: lo.ToPtr(uint64(userId)),
 		Body:   task.Marshal(),
 	})
+
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to push websocket command to nexus...")
+	}
 }
 
 func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) {
@@ -27,8 +32,12 @@ func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) {
 	defer cancel()
 
 	pc := gap.Nx.GetNexusGrpcConn()
-	_, _ = proto.NewStreamServiceClient(pc).PushStreamBatch(ctx, &proto.PushStreamBatchRequest{
+	_, err := proto.NewStreamServiceClient(pc).PushStreamBatch(ctx, &proto.PushStreamBatchRequest{
 		UserId: userId,
 		Body:   task.Marshal(),
 	})
+
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to push websocket command to nexus in batches...")
+	}
 }
