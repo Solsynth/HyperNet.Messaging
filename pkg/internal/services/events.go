@@ -93,7 +93,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 
 	if strings.HasPrefix(event.Type, "messages") {
 		event.Channel, _ = GetChannel(event.ChannelID)
-		if event.Channel.RealmID == nil {
+		if event.Channel.RealmID != nil {
 			realm, err := authkit.GetRealm(gap.Nx, *event.Channel.RealmID)
 			if err == nil {
 				event.Channel.Realm = &realm
