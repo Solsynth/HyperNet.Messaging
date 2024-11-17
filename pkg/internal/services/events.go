@@ -79,6 +79,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 		ChannelID: event.ChannelID,
 	}).Find(&members).Error; err != nil {
 		// Couldn't get channel members, skip notifying
+		log.Warn().Err(err).Msg("Failed to fetch members, the notifying of new event was terminated...")
 		return event, nil
 	}
 
