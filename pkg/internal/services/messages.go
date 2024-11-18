@@ -19,15 +19,16 @@ func EditMessage(event models.Event, body models.EventMessageBody) (models.Event
 	if err != nil {
 		return event, err
 	}
-	body.RelatedEvent = event.ID
+	body.RelatedEvent = &event.ID
 	_, err = NewEvent(models.Event{
-		Uuid:      uuid.NewString(),
-		Body:      EncodeMessageBody(body),
-		Type:      models.EventMessageEdit,
-		Channel:   event.Channel,
-		Sender:    event.Sender,
-		ChannelID: event.ChannelID,
-		SenderID:  event.SenderID,
+		Uuid:         uuid.NewString(),
+		Body:         EncodeMessageBody(body),
+		Type:         models.EventMessageEdit,
+		Channel:      event.Channel,
+		Sender:       event.Sender,
+		QuoteEventID: body.QuoteEventID,
+		ChannelID:    event.ChannelID,
+		SenderID:     event.SenderID,
 	})
 	if err != nil {
 		return event, err
@@ -44,7 +45,7 @@ func DeleteMessage(event models.Event) (models.Event, error) {
 	_, err = NewEvent(models.Event{
 		Uuid: uuid.NewString(),
 		Body: EncodeMessageBody(models.EventMessageBody{
-			RelatedEvent: event.ID,
+			RelatedEvent: &event.ID,
 		}),
 		Type:      models.EventMessageDelete,
 		Channel:   event.Channel,

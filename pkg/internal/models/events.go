@@ -15,13 +15,15 @@ const (
 type Event struct {
 	cruda.BaseModel
 
-	Uuid      string            `json:"uuid"`
-	Body      datatypes.JSONMap `json:"body"`
-	Type      string            `json:"type"`
-	Channel   Channel           `json:"channel"`
-	Sender    ChannelMember     `json:"sender"`
-	ChannelID uint              `json:"channel_id"`
-	SenderID  uint              `json:"sender_id"`
+	Uuid         string            `json:"uuid"`
+	Body         datatypes.JSONMap `json:"body"`
+	Type         string            `json:"type"`
+	Channel      Channel           `json:"channel"`
+	Sender       ChannelMember     `json:"sender"`
+	QuoteEventID *uint             `json:"quote_event_id,omitempty"`
+	QuoteEvent   *Event            `json:"quote_event,omitempty" gorm:"foreignKey:QuoteEventID"`
+	ChannelID    uint              `json:"channel_id"`
+	SenderID     uint              `json:"sender_id"`
 }
 
 // Event Payloads
@@ -30,7 +32,7 @@ type EventMessageBody struct {
 	Text         string   `json:"text,omitempty"`
 	Algorithm    string   `json:"algorithm,omitempty"`
 	Attachments  []string `json:"attachments,omitempty"`
-	QuoteEvent   uint     `json:"quote_event,omitempty"`
-	RelatedEvent uint     `json:"related_event,omitempty"`
+	QuoteEventID *uint    `json:"quote_event,omitempty"`
+	RelatedEvent *uint    `json:"related_event,omitempty"`
 	RelatedUsers []uint   `json:"related_users,omitempty"`
 }
