@@ -57,14 +57,15 @@ func newMessageEvent(c *fiber.Ctx) error {
 	_ = jsoniter.Unmarshal(raw, &parsed)
 
 	event := models.Event{
-		Uuid:         data.Uuid,
-		Body:         parsed,
-		Type:         data.Type,
-		Sender:       member,
-		Channel:      channel,
-		QuoteEventID: data.Body.QuoteEventID,
-		ChannelID:    channel.ID,
-		SenderID:     member.ID,
+		Uuid:           data.Uuid,
+		Body:           parsed,
+		Type:           data.Type,
+		Sender:         member,
+		Channel:        channel,
+		QuoteEventID:   data.Body.QuoteEventID,
+		RelatedEventID: data.Body.RelatedEventID,
+		ChannelID:      channel.ID,
+		SenderID:       member.ID,
 	}
 
 	if event, err = services.NewEvent(event); err != nil {
