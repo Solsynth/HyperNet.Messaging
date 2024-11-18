@@ -21,15 +21,14 @@ func EditMessage(event models.Event, body models.EventMessageBody) (models.Event
 	}
 	body.RelatedEventID = &event.ID
 	_, err = NewEvent(models.Event{
-		Uuid:           uuid.NewString(),
-		Body:           EncodeMessageBody(body),
-		Type:           models.EventMessageEdit,
-		Channel:        event.Channel,
-		Sender:         event.Sender,
-		QuoteEventID:   body.QuoteEventID,
-		RelatedEventID: body.RelatedEventID,
-		ChannelID:      event.ChannelID,
-		SenderID:       event.SenderID,
+		Uuid:         uuid.NewString(),
+		Body:         EncodeMessageBody(body),
+		Type:         models.EventMessageEdit,
+		Channel:      event.Channel,
+		Sender:       event.Sender,
+		QuoteEventID: body.QuoteEventID,
+		ChannelID:    event.ChannelID,
+		SenderID:     event.SenderID,
 	})
 	if err != nil {
 		return event, err
