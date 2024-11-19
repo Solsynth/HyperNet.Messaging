@@ -24,7 +24,7 @@ func NewGorm() error {
 		Colorful:                  true,
 		IgnoreRecordNotFoundError: true,
 		LogLevel:                  lo.Ternary(viper.GetBool("debug.database"), logger.Info, logger.Silent),
-	})})
+	}), DisableForeignKeyConstraintWhenMigrating: true})
 
 	return err
 
