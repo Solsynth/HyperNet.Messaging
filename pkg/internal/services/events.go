@@ -192,6 +192,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				},
 				Priority: 5,
 			},
+			true,
 		)
 		if err != nil {
 			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
@@ -228,6 +229,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				},
 				Priority: 5,
 			},
+			true,
 		)
 		if err != nil {
 			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
