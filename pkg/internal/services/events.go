@@ -166,13 +166,21 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		}
 	}
 
+	displayTitle := fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText())
+
 	if len(pendingUsers) > 0 {
+		log.Debug().
+			Uint("event_id", event.ID).
+			Str("title", displayTitle).
+			Int("count", len(pendingUsers)).
+			Msg("Notifying new event...")
+
 		err := authkit.NotifyUserBatch(
 			gap.Nx,
 			pendingUsers,
 			pushkit.Notification{
 				Topic:    "messaging.message",
-				Title:    fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText()),
+				Title:    displayTitle,
 				Subtitle: displaySubtitle,
 				Body:     displayText,
 				Metadata: map[string]any{
@@ -197,12 +205,18 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			displaySubtitle = "Mentioned you"
 		}
 
+		log.Debug().
+			Uint("event_id", event.ID).
+			Str("title", displayTitle).
+			Int("count", len(mentionedUsers)).
+			Msg("Notifying new event...")
+
 		err := authkit.NotifyUserBatch(
 			gap.Nx,
 			mentionedUsers,
 			pushkit.Notification{
 				Topic:    "messaging.message",
-				Title:    fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText()),
+				Title:    displayTitle,
 				Subtitle: displaySubtitle,
 				Body:     displayText,
 				Metadata: map[string]any{
