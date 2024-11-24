@@ -130,6 +130,13 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 			}
 		}
 
+		if channel.RealmID != nil {
+			realm, err := authkit.GetRealm(gap.Nx, *channel.RealmID)
+			if err == nil {
+				channel.Realm = &realm
+			}
+		}
+
 		err = authkit.NotifyUserBatch(
 			gap.Nx,
 			pendingUsers,
