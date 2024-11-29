@@ -36,7 +36,7 @@ func listChannelMembers(c *fiber.Ctx) error {
 	}
 }
 
-func getMyChannelMembership(c *fiber.Ctx) error {
+func getChannelProfileOfMyself(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
@@ -146,7 +146,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 }
 
-func editMyChannelMembership(c *fiber.Ctx) error {
+func editChannelProfileOfMyself(c *fiber.Ctx) error {
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
@@ -154,8 +154,7 @@ func editMyChannelMembership(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		Nick        string `json:"nick"`
-		NotifyLevel int8   `json:"notify_level"`
+		Nick string `json:"nick"`
 	}
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
@@ -182,12 +181,54 @@ func editMyChannelMembership(c *fiber.Ctx) error {
 	}
 
 	membership.Name = user.Name
-	membership.Notify = data.NotifyLevel
 	if len(data.Nick) > 0 {
 		membership.Nick = data.Nick
 	} else {
 		membership.Nick = user.Nick
 	}
+
+	if membership, err := services.EditChannelMember(membership); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else {
+		return c.JSON(membership)
+	}
+}
+
+func editChannelNotifyLevelOfMyself(c *fiber.Ctx) error {
+	if err := sec.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(authm.Account)
+	alias := c.Params("channel")
+
+	var data struct {
+		NotifyLevel int8 `json:"notify_level"`
+	}
+
+	if err := exts.BindAndValidate(c, &data); err != nil {
+		return err
+	}
+
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	var membership models.ChannelMember
+	if err := database.C.Where(&models.ChannelMember{
+		ChannelID: channel.ID,
+		AccountID: user.ID,
+	}).First(&membership).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	membership.Notify = data.NotifyLevel
 
 	if membership, err := services.EditChannelMember(membership); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())

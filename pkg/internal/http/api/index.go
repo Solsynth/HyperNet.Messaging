@@ -21,8 +21,9 @@ func MapAPIs(app *fiber.App, baseURL string) {
 			channels.Delete("/:channelId", deleteChannel)
 
 			channels.Get("/:channel/members", listChannelMembers)
-			channels.Get("/:channel/members/me", getMyChannelMembership)
-			channels.Put("/:channel/members/me", editMyChannelMembership)
+			channels.Get("/:channel/members/me", getChannelProfileOfMyself)
+			channels.Put("/:channel/members/me", editChannelProfileOfMyself)
+			channels.Put("/:channel/members/me/notify", editChannelNotifyLevelOfMyself)
 			channels.Post("/:channel/members", addChannelMember)
 			channels.Post("/:channel/members/me", joinChannel)
 			channels.Delete("/:channel/members", removeChannelMember)
