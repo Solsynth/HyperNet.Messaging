@@ -17,6 +17,8 @@ import (
 
 func listChannelMembers(c *fiber.Ctx) error {
 	alias := c.Params("channel")
+	take := c.QueryInt("take", 0)
+	offset := c.QueryInt("offset", 0)
 
 	var err error
 	var channel models.Channel
@@ -29,7 +31,7 @@ func listChannelMembers(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if members, err := services.ListChannelMember(channel.ID); err != nil {
+	if members, err := services.ListChannelMember(channel.ID, take, offset); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	} else {
 		return c.JSON(members)

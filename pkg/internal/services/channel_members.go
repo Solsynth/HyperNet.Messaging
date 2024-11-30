@@ -15,10 +15,11 @@ import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 )
 
-func ListChannelMember(channelId uint) ([]models.ChannelMember, error) {
+func ListChannelMember(channelId uint, take int, offset int) ([]models.ChannelMember, error) {
 	var members []models.ChannelMember
 
 	if err := database.C.
+		Limit(take).Offset(offset).
 		Where(&models.ChannelMember{ChannelID: channelId}).
 		Find(&members).Error; err != nil {
 		return members, err
