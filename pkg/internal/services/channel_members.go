@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
@@ -10,6 +11,7 @@ import (
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
+	"gorm.io/gorm"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
@@ -66,7 +68,15 @@ func AddChannelMemberWithCheck(user authm.Account, target models.Channel) error 
 }
 
 func AddChannelMember(user authm.Account, target models.Channel) error {
-	member := models.ChannelMember{
+	var member models.ChannelMember
+	if err := database.C.Where(&models.ChannelMember{
+		AccountID: user.ID,
+		ChannelID: target.ID,
+	}).First(&member).Error; err == nil || errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("the user is already in the channel")
+	}
+
+	member = models.ChannelMember{
 		ChannelID: target.ID,
 		AccountID: user.ID,
 	}
