@@ -76,10 +76,10 @@ func AddChannelMember(user authm.Account, target models.Channel) error {
 	if err == nil {
 		cacheManager := cache.New[any](localCache.S)
 		marshal := marshaler.New(cacheManager)
-		contx := context.Background()
+		ctx := context.Background()
 
 		_ = marshal.Invalidate(
-			contx,
+			ctx,
 			store.WithInvalidateTags([]string{
 				fmt.Sprintf("channel#%d", target.ID),
 				fmt.Sprintf("user#%d", user.ID),

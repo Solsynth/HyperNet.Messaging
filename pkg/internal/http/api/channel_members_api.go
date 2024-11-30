@@ -7,6 +7,7 @@ import (
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
+	"strconv"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 
@@ -80,7 +81,7 @@ func addChannelMember(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 
 	var data struct {
-		Target string `json:"target" validate:"required"`
+		Related string `json:"related" validate:"required"`
 	}
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
@@ -102,8 +103,15 @@ func addChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to add member into it")
 	}
 
+	var err error
 	var account authm.Account
-	if err := database.C.Where("name = ?", data.Target).First(&account).Error; err != nil {
+	var numericId int
+	if numericId, err = strconv.Atoi(data.Related); err == nil {
+		account, err = authkit.GetUser(gap.Nx, uint(numericId))
+	} else {
+		account, err = authkit.GetUserByName(gap.Nx, data.Related)
+	}
+	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
