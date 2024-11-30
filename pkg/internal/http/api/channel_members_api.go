@@ -31,10 +31,18 @@ func listChannelMembers(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
+	count, err := services.CountChannelMember(channel.ID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
 	if members, err := services.ListChannelMember(channel.ID, take, offset); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	} else {
-		return c.JSON(members)
+		return c.JSON(fiber.Map{
+			"count": count,
+			"data":  members,
+		})
 	}
 }
 

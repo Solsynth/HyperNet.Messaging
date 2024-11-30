@@ -15,6 +15,17 @@ import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 )
 
+func CountChannelMember(channelId uint) (int64, error) {
+	var count int64
+	if err := database.C.Where(&models.ChannelMember{
+		ChannelID: channelId,
+	}).Model(&models.ChannelMember{}).Count(&count).Error; err != nil {
+		return 0, err
+	} else {
+		return count, nil
+	}
+}
+
 func ListChannelMember(channelId uint, take int, offset int) ([]models.ChannelMember, error) {
 	var members []models.ChannelMember
 
