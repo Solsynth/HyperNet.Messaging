@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
@@ -119,14 +120,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 	user := c.Locals("user").(authm.Account)
 	alias := c.Params("channel")
-
-	var data struct {
-		Target string `json:"target" validate:"required"`
-	}
-
-	if err := exts.BindAndValidate(c, &data); err != nil {
-		return err
-	}
+	memberId, _ := c.ParamsInt("memberId", 0)
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
@@ -144,12 +138,15 @@ func removeChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member into it")
 	}
 
-	var account authm.Account
-	if err := database.C.Where("name = ?", data.Target).First(&account).Error; err != nil {
+	var member models.ChannelMember
+	if err := database.C.Where(&models.ChannelMember{
+		BaseModel: cruda.BaseModel{ID: uint(memberId)},
+		ChannelID: channel.ID,
+	}).First(&member).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if err := services.RemoveChannelMember(account, channel); err != nil {
+	if err := services.RemoveChannelMember(member, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)
@@ -294,7 +291,15 @@ func leaveChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "you cannot leave your own channel")
 	}
 
-	if err := services.RemoveChannelMember(user, channel); err != nil {
+	var member models.ChannelMember
+	if err := database.C.Where(&models.ChannelMember{
+		ChannelID: channel.ID,
+		AccountID: user.ID,
+	}).First(&member).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if err := services.RemoveChannelMember(member, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)

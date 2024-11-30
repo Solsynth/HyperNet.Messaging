@@ -110,28 +110,19 @@ func EditChannelMember(membership models.ChannelMember) (models.ChannelMember, e
 	return membership, nil
 }
 
-func RemoveChannelMember(user authm.Account, target models.Channel) error {
-	var member models.ChannelMember
-
-	if err := database.C.Where(&models.ChannelMember{
-		ChannelID: target.ID,
-		AccountID: user.ID,
-	}).First(&member).Error; err != nil {
-		return err
-	}
-
+func RemoveChannelMember(member models.ChannelMember, target models.Channel) error {
 	if err := database.C.Delete(&member).Error; err == nil {
 		database.C.Where("sender_id = ?").Delete(&models.Event{})
 
 		cacheManager := cache.New[any](localCache.S)
 		marshal := marshaler.New(cacheManager)
-		contx := context.Background()
+		ctx := context.Background()
 
 		_ = marshal.Invalidate(
-			contx,
+			ctx,
 			store.WithInvalidateTags([]string{
 				fmt.Sprintf("channel#%d", target.ID),
-				fmt.Sprintf("user#%d", user.ID),
+				fmt.Sprintf("user#%d", target.AccountID),
 			}),
 		)
 
