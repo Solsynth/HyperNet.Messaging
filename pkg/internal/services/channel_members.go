@@ -72,7 +72,7 @@ func AddChannelMember(user authm.Account, target models.Channel) error {
 	if err := database.C.Where(&models.ChannelMember{
 		AccountID: user.ID,
 		ChannelID: target.ID,
-	}).First(&member).Error; err == nil || errors.Is(err, gorm.ErrRecordNotFound) {
+	}).First(&member).Error; err == nil || !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("the user is already in the channel")
 	}
 
