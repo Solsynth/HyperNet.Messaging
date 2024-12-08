@@ -83,7 +83,11 @@ func NewEvent(event models.Event) (models.Event, error) {
 		return event, nil
 	}
 
-	event, _ = GetEvent(event.Channel, event.ID)
+	event, err := GetEvent(event.Channel, event.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch event, the notifying of new event was terminated...")
+		return event, err
+	}
 	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
 		return uint64(item.AccountID)
 	})
