@@ -46,10 +46,10 @@ func ListEvent(channel models.Channel, take int, offset int) ([]models.Event, er
 	}
 }
 
-func GetEvent(channel models.Channel, id uint) (models.Event, error) {
+func GetEvent(channelId uint, id uint) (models.Event, error) {
 	var event models.Event
 	if err := database.C.
-		Where("id = ? AND channel_id = ?", id, channel.ID).
+		Where("id = ? AND channel_id = ?", id, channelId).
 		Preload("Sender").
 		First(&event).Error; err != nil {
 		return event, err
@@ -83,7 +83,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 		return event, nil
 	}
 
-	event, err := GetEvent(event.Channel, event.ID)
+	event, err := GetEvent(event.ChannelID, event.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch event, the notifying of new event was terminated...")
 		return event, err

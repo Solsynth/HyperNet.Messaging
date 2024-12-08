@@ -34,7 +34,7 @@ func getEvent(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusForbidden, fmt.Sprintf("you need join the channel before you read the messages: %v", err))
 	}
 
-	event, err := services.GetEvent(channel, uint(id))
+	event, err := services.GetEvent(channel.ID, uint(id))
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
