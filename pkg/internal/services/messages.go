@@ -38,7 +38,8 @@ func EditMessage(event models.Event, body models.EventMessageBody) (models.Event
 }
 
 func DeleteMessage(event models.Event) (models.Event, error) {
-	_, err := DeleteEvent(event)
+	clonedEvent := event
+	_, err := DeleteEvent(clonedEvent)
 	if err != nil {
 		return event, err
 	}

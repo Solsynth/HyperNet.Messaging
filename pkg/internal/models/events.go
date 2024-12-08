@@ -21,9 +21,7 @@ type Event struct {
 	Channel        Channel           `json:"channel"`
 	Sender         ChannelMember     `json:"sender"`
 	QuoteEventID   *uint             `json:"quote_event_id,omitempty"`
-	QuoteEvent     *Event            `json:"quote_event,omitempty" gorm:"foreignKey:QuoteEventID"`
 	RelatedEventID *uint             `json:"related_event_id,omitempty"`
-	RelatedEvent   *Event            `json:"related_event,omitempty" gorm:"foreignKey:RelatedEventID"`
 	ChannelID      uint              `json:"channel_id"`
 	SenderID       uint              `json:"sender_id"`
 }
