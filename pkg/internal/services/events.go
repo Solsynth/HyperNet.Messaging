@@ -153,7 +153,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			displayText = body.Text
 		}
 	case models.EventMessageDelete:
-		displayText = "Recalled a message"
+		displayText = "Deleted a message"
 	}
 
 	if len(displayText) == 0 {
@@ -167,6 +167,13 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			displayText += fmt.Sprintf(" (%d file)", len(body.Attachments))
 		} else {
 			displayText += fmt.Sprintf(" (%d files)", len(body.Attachments))
+		}
+	}
+
+	if len(event.Sender.Nick) == 0 {
+		user, err := authkit.GetUser(gap.Nx, event.SenderID)
+		if err == nil {
+			event.Sender.Nick = user.Nick
 		}
 	}
 
