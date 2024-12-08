@@ -9,7 +9,6 @@ import (
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -26,7 +25,6 @@ func createDirectChannel(c *fiber.Ctx) error {
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
 		RelatedUser uint   `json:"related_user"`
-		IsEncrypted bool   `json:"is_encrypted"`
 	}
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
@@ -46,10 +44,8 @@ func createDirectChannel(c *fiber.Ctx) error {
 		}
 	}
 
-	var relatedUser authm.Account
-	if err := database.C.
-		Where("external_id = ?", data.RelatedUser).
-		First(&relatedUser).Error; err != nil {
+	relatedUser, err := authkit.GetUser(gap.Nx, data.RelatedUser)
+	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unable to find related user: %v", err))
 	}
 
@@ -75,7 +71,7 @@ func createDirectChannel(c *fiber.Ctx) error {
 		channel.RealmID = &realm.ID
 	}
 
-	channel, err := services.NewChannel(channel)
+	channel, err = services.NewChannel(channel)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
