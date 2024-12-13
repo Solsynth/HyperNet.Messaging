@@ -170,9 +170,10 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 		}
 	}
 
-	if len(event.Sender.Nick) == 0 {
-		user, err := authkit.GetUser(gap.Nx, event.SenderID)
-		if err == nil {
+	user, err := authkit.GetUser(gap.Nx, event.SenderID)
+	if err == nil {
+		event.Sender.Avatar = user.Avatar
+		if len(event.Sender.Nick) == 0 {
 			event.Sender.Nick = user.Nick
 		}
 	}
