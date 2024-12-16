@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
-	"time"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
@@ -123,13 +124,6 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 		}
 
 		channel, _ = GetChannel(channel.ID)
-		if channel.RealmID == nil {
-			realm, err := authkit.GetRealm(gap.Nx, *channel.RealmID)
-			if err == nil {
-				channel.Realm = &realm
-			}
-		}
-
 		if channel.RealmID != nil {
 			realm, err := authkit.GetRealm(gap.Nx, *channel.RealmID)
 			if err == nil {
