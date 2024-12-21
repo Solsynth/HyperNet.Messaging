@@ -105,7 +105,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 				event.Channel.Realm = &realm
 			}
 		}
-		NotifyMessageEvent(members, event)
+		go NotifyMessageEvent(members, event)
 	}
 
 	return event, nil
@@ -180,16 +180,14 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	displayTitle := fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText())
-	replyToken, err := CreateReplyToken(event.ID, event.Sender.AccountID)
 
 	metadata := map[string]any{
-		"avatar":      event.Sender.Avatar,
-		"user_id":     event.Sender.AccountID,
-		"user_name":   event.Sender.Name,
-		"user_nick":   event.Sender.Nick,
-		"channel_id":  event.ChannelID,
-		"event_id":    event.ID,
-		"reply_token": replyToken,
+		"avatar":     event.Sender.Avatar,
+		"user_id":    event.Sender.AccountID,
+		"user_name":  event.Sender.Name,
+		"user_nick":  event.Sender.Nick,
+		"channel_id": event.ChannelID,
+		"event_id":   event.ID,
 	}
 
 	if len(pendingUsers) > 0 {
@@ -199,21 +197,29 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			Int("count", len(pendingUsers)).
 			Msg("Notifying new event...")
 
-		err := authkit.NotifyUserBatch(
-			gap.Nx,
-			pendingUsers,
-			pushkit.Notification{
-				Topic:    "messaging.message",
-				Title:    displayTitle,
-				Subtitle: displaySubtitle,
-				Body:     displayText,
-				Metadata: metadata,
-				Priority: 5,
-			},
-			true,
-		)
-		if err != nil {
-			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+		for _, pendingUser := range pendingUsers {
+			replyToken, err := CreateReplyToken(event.ID, uint(pendingUser))
+			if err != nil {
+				log.Warn().Err(err).Msg("An error occurred when trying create reply token.")
+				continue
+			}
+			metadata["reply_token"] = replyToken
+			err = authkit.NotifyUser(
+				gap.Nx,
+				pendingUser,
+				pushkit.Notification{
+					Topic:    "messaging.message",
+					Title:    displayTitle,
+					Subtitle: displaySubtitle,
+					Body:     displayText,
+					Metadata: metadata,
+					Priority: 10,
+				},
+				true,
+			)
+			if err != nil {
+				log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+			}
 		}
 	}
 
@@ -230,21 +236,29 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 			Int("count", len(mentionedUsers)).
 			Msg("Notifying new event...")
 
-		err := authkit.NotifyUserBatch(
-			gap.Nx,
-			mentionedUsers,
-			pushkit.Notification{
-				Topic:    "messaging.message",
-				Title:    displayTitle,
-				Subtitle: displaySubtitle,
-				Body:     displayText,
-				Metadata: metadata,
-				Priority: 5,
-			},
-			true,
-		)
-		if err != nil {
-			log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+		for _, mentionedUser := range mentionedUsers {
+			replyToken, err := CreateReplyToken(event.ID, uint(mentionedUser))
+			if err != nil {
+				log.Warn().Err(err).Msg("An error occurred when trying create reply token.")
+				continue
+			}
+			metadata["reply_token"] = replyToken
+			err = authkit.NotifyUser(
+				gap.Nx,
+				mentionedUser,
+				pushkit.Notification{
+					Topic:    "messaging.message",
+					Title:    displayTitle,
+					Subtitle: displaySubtitle,
+					Body:     displayText,
+					Metadata: metadata,
+					Priority: 10,
+				},
+				true,
+			)
+			if err != nil {
+				log.Warn().Err(err).Msg("An error occurred when trying notify user.")
+			}
 		}
 	}
 }
