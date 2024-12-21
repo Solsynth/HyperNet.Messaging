@@ -2,12 +2,13 @@ package services
 
 import (
 	"fmt"
+	"strings"
+
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
-	"strings"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
@@ -180,6 +181,15 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 
 	displayTitle := fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText())
 
+	metadata := map[string]any{
+		"avatar":     event.Sender.Avatar,
+		"user_id":    event.Sender.AccountID,
+		"user_name":  event.Sender.Name,
+		"user_nick":  event.Sender.Nick,
+		"channel_id": event.ChannelID,
+		"event_id":   event.ID,
+	}
+
 	if len(pendingUsers) > 0 {
 		log.Debug().
 			Uint("event_id", event.ID).
@@ -195,13 +205,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				Title:    displayTitle,
 				Subtitle: displaySubtitle,
 				Body:     displayText,
-				Metadata: map[string]any{
-					"avatar":     event.Sender.Avatar,
-					"user_id":    event.Sender.AccountID,
-					"user_name":  event.Sender.Name,
-					"user_nick":  event.Sender.Nick,
-					"channel_id": event.ChannelID,
-				},
+				Metadata: metadata,
 				Priority: 5,
 			},
 			true,
@@ -232,13 +236,7 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 				Title:    displayTitle,
 				Subtitle: displaySubtitle,
 				Body:     displayText,
-				Metadata: map[string]any{
-					"avatar":     event.Sender.Avatar,
-					"user_id":    event.Sender.AccountID,
-					"user_name":  event.Sender.Name,
-					"user_nick":  event.Sender.Nick,
-					"channel_id": event.ChannelID,
-				},
+				Metadata: metadata,
 				Priority: 5,
 			},
 			true,

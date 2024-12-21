@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 	"fmt"
+	"regexp"
+
 	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
-	"regexp"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
@@ -43,6 +44,19 @@ func CacheChannelIdentityCache(channel models.Channel, member models.ChannelMemb
 		channelIdentityCacheEntry{channel, member},
 		store.WithTags([]string{"channel-identity", fmt.Sprintf("channel#%d", channel.ID), fmt.Sprintf("user#%d", user)}),
 	)
+}
+
+func GetChannelIdentityWithID(id uint, user uint) (models.Channel, models.ChannelMember, error) {
+	var member models.ChannelMember
+
+	if err := database.C.Where(models.ChannelMember{
+		AccountID: user,
+		ChannelID: id,
+	}).Preload("Channel").First(&member).Error; err != nil {
+		return member.Channel, member, fmt.Errorf("channel principal not found: %v", err.Error())
+	}
+
+	return member.Channel, member, nil
 }
 
 func GetChannelIdentity(alias string, user uint, realm ...authm.Realm) (models.Channel, models.ChannelMember, error) {

@@ -7,6 +7,11 @@ import (
 func MapAPIs(app *fiber.App, baseURL string) {
 	api := app.Group(baseURL).Name("API")
 	{
+		quick := api.Group("/quick")
+		{
+			quick.Post("/:channelId/reply/:eventId", quickReply)
+		}
+
 		channels := api.Group("/channels/:realm").Use(realmMiddleware).Name("Channels API")
 		{
 			channels.Get("/", listChannel)
