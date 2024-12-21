@@ -19,3 +19,4 @@ max_participants = 20
 
 [security]
 internal_public_key = "keys/internal_public_key.pem"
+reply_token_secret = "QSu8iYYLDkGj10H3FtNI7OabpGl8N7Rg6rBagofQN4Uza3nIrXpVzDEfAiU1G2Yn"

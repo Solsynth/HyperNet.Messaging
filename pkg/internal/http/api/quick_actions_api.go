@@ -7,8 +7,6 @@ import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
-	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
-	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
@@ -20,12 +18,22 @@ import (
 // It did not support all the features of the message event
 // But it just works
 func quickReply(c *fiber.Ctx) error {
-	if err := sec.EnsureAuthenticated(c); err != nil {
-		return err
+	replyTk := c.Query("replyToken")
+	if len(replyTk) == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "reply token is required")
 	}
-	user := c.Locals("user").(authm.Account)
+
+	claims, err := services.ParseReplyToken(replyTk)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("reply token is invaild: %v", err))
+	}
+
 	channelId, _ := c.ParamsInt("channelId", 0)
 	eventId, _ := c.ParamsInt("eventId", 0)
+
+	if claims.EventID != uint(eventId) {
+		return fiber.NewError(fiber.StatusBadRequest, "reply token is invaild, event id mismatch")
+	}
 
 	var data struct {
 		Type string                  `json:"type" validate:"required"`
@@ -43,7 +51,7 @@ func quickReply(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "empty message was not allowed")
 	}
 
-	channel, member, err := services.GetChannelIdentityWithID(uint(channelId), user.ID)
+	channel, member, err := services.GetChannelIdentityWithID(uint(channelId), claims.UserID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("channel / member not found: %v", err.Error()))
 	}

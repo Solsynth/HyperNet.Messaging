@@ -180,14 +180,16 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	}
 
 	displayTitle := fmt.Sprintf("%s (%s)", event.Sender.Nick, event.Channel.DisplayText())
+	replyToken, err := CreateReplyToken(event.ID, event.Sender.AccountID)
 
 	metadata := map[string]any{
-		"avatar":     event.Sender.Avatar,
-		"user_id":    event.Sender.AccountID,
-		"user_name":  event.Sender.Name,
-		"user_nick":  event.Sender.Nick,
-		"channel_id": event.ChannelID,
-		"event_id":   event.ID,
+		"avatar":      event.Sender.Avatar,
+		"user_id":     event.Sender.AccountID,
+		"user_name":   event.Sender.Name,
+		"user_nick":   event.Sender.Nick,
+		"channel_id":  event.ChannelID,
+		"event_id":    event.ID,
+		"reply_token": replyToken,
 	}
 
 	if len(pendingUsers) > 0 {
