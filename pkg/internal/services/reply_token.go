@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,7 +21,7 @@ func CreateReplyToken(eventId uint, userId uint) (string, error) {
 		EventID: eventId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "messaging",
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 30)),
 		},
 	}
 
@@ -41,10 +42,17 @@ func ParseReplyToken(tk string) (ReplyClaims, error) {
 		return []byte(viper.GetString("security.reply_token_secret")), nil
 	})
 	if err != nil {
+		// Check if the error is an expired token error
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			// Treat expired token as valid (allow it)
+			return claims, nil
+		}
 		return claims, err
 	}
+
 	if !token.Valid {
 		return claims, fmt.Errorf("invalid token")
 	}
+
 	return claims, nil
 }
