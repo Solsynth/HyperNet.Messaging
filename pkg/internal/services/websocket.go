@@ -27,12 +27,12 @@ func PushCommand(userId uint, task nex.WebSocketPackage) {
 	}
 }
 
-func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) {
+func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) []uint64 {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	pc := gap.Nx.GetNexusGrpcConn()
-	_, err := proto.NewStreamServiceClient(pc).PushStreamBatch(ctx, &proto.PushStreamBatchRequest{
+	resp, err := proto.NewStreamServiceClient(pc).PushStreamBatch(ctx, &proto.PushStreamBatchRequest{
 		UserId: userId,
 		Body:   task.Marshal(),
 	})
@@ -40,4 +40,6 @@ func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) {
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to push websocket command to nexus in batches...")
 	}
+
+	return resp.GetSuccessList()
 }
