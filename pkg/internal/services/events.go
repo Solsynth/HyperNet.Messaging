@@ -92,12 +92,9 @@ func NewEvent(event models.Event) (models.Event, error) {
 	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
 		return uint64(item.AccountID)
 	})
-	successList64 := PushCommandBatch(idxList, nex.WebSocketPackage{
+	_ = PushCommandBatch(idxList, nex.WebSocketPackage{
 		Action:  "events.new",
 		Payload: event,
-	})
-	successList := lo.Map(successList64, func(item uint64, index int) uint {
-		return uint(item)
 	})
 
 	if strings.HasPrefix(event.Type, "messages") {
@@ -108,9 +105,7 @@ func NewEvent(event models.Event) (models.Event, error) {
 				event.Channel.Realm = &realm
 			}
 		}
-		go NotifyMessageEvent(lo.Filter(members, func(item models.ChannelMember, _ int) bool {
-			return !lo.Contains(successList, item.AccountID)
-		}), event)
+		go NotifyMessageEvent(members, event)
 	}
 
 	return event, nil
