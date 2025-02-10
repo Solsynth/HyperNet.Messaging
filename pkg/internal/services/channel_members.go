@@ -53,9 +53,11 @@ func GetChannelMember(user authm.Account, channelId uint) (models.ChannelMember,
 	return member, nil
 }
 
-func AddChannelMemberWithCheck(user authm.Account, target models.Channel) error {
-	if err := authkit.EnsureUserPermGranted(gap.Nx, user.ID, target.AccountID, "ChannelAdd", true); err != nil {
-		return fmt.Errorf("unable to add user into your channel due to access denied: %v", err)
+func AddChannelMemberWithCheck(user, op authm.Account, target models.Channel) error {
+	if user.ID != op.ID {
+		if err := authkit.EnsureUserPermGranted(gap.Nx, user.ID, op.ID, "ChannelAdd", true); err != nil {
+			return fmt.Errorf("unable to add user into your channel due to access denied: %v", err)
+		}
 	}
 
 	member := models.ChannelMember{

@@ -184,7 +184,7 @@ func ListChannel(user *authm.Account, realmId ...uint) ([]models.Channel, error)
 	var idRange []uint
 	if user != nil {
 		if err := database.C.Where("account_id = ?", user.ID).Find(&identities).Error; err != nil {
-			return nil, fmt.Errorf("unabkle to get identities: %v", err)
+			return nil, fmt.Errorf("unable to get identities: %v", err)
 		}
 		for _, identity := range identities {
 			idRange = append(idRange, identity.ChannelID)

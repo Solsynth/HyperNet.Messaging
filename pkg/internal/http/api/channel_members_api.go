@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
@@ -97,10 +96,12 @@ func addChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "direct message member changes was not allowed")
 	}
 
-	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
-		return fiber.NewError(fiber.StatusForbidden, err.Error())
-	} else if member.PowerLevel < 50 {
-		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to add member into it")
+	if !channel.IsPublic {
+		if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+			return fiber.NewError(fiber.StatusForbidden, err.Error())
+		} else if member.PowerLevel < 50 {
+			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to add member into it")
+		}
 	}
 
 	var err error
@@ -115,7 +116,7 @@ func addChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	if err := services.AddChannelMemberWithCheck(account, channel); err != nil {
+	if err := services.AddChannelMemberWithCheck(account, user, channel); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.SendStatus(fiber.StatusOK)
@@ -249,37 +250,6 @@ func editChannelNotifyLevelOfMyself(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else {
 		return c.JSON(membership)
-	}
-}
-
-func joinChannel(c *fiber.Ctx) error {
-	if err := sec.EnsureAuthenticated(c); err != nil {
-		return err
-	}
-	user := c.Locals("user").(authm.Account)
-	alias := c.Params("channel")
-
-	var channel models.Channel
-	if err := database.C.Where(&models.Channel{
-		Alias: alias,
-	}).First(&channel).Error; err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else if _, _, err := services.GetAvailableChannel(channel.ID, user); err == nil {
-		return fiber.NewError(fiber.StatusBadRequest, "you already joined the channel")
-	} else if channel.RealmID == nil && !channel.IsCommunity {
-		return fiber.NewError(fiber.StatusBadRequest, "you were impossible to join a channel without related realm and non-community")
-	}
-
-	if channel.RealmID != nil {
-		if _, err := authkit.GetRealmMember(gap.Nx, *channel.RealmID, user.ID); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you are not a part of the realm: %v", err))
-		}
-	}
-
-	if err := services.AddChannelMember(user, channel); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else {
-		return c.SendStatus(fiber.StatusOK)
 	}
 }
 
