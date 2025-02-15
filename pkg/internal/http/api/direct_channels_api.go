@@ -53,6 +53,10 @@ func createDirectChannel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("you already have a direct with that user #%d", ch.ID))
 	}
 
+	if err := authkit.EnsureUserPermGranted(gap.Nx, user.ID, relatedUser.ID, "ChannelAdd", true); err != nil {
+		return fmt.Errorf("unable to add user into your channel due to access denied: %v", err)
+	}
+
 	channel := models.Channel{
 		Alias:       data.Alias,
 		Name:        data.Name,
