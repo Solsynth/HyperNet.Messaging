@@ -139,12 +139,14 @@ func removeChannelMember(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if channel.Type == models.ChannelTypeDirect {
 		return fiber.NewError(fiber.StatusBadRequest, "direct message member changes was not allowed")
+	} else if channel.AccountID == user.ID {
+		return fiber.NewError(fiber.StatusBadRequest, "you cannot remove yourself from your own channel")
 	}
 
 	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
 		return fiber.NewError(fiber.StatusForbidden, err.Error())
 	} else if member.PowerLevel < 50 {
-		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member into it")
+		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member from it")
 	}
 
 	var member models.ChannelMember
