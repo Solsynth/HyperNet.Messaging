@@ -15,6 +15,7 @@ func MapAPIs(app *fiber.App, baseURL string) {
 		channels := api.Group("/channels/:realm").Use(realmMiddleware).Name("Channels API")
 		{
 			channels.Get("/", listChannel)
+			channels.Get("/public", listPublicChannel)
 			channels.Get("/me", listOwnedChannel)
 			channels.Get("/me/available", listAvailableChannel)
 			channels.Get("/:channel", getChannel)

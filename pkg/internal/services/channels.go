@@ -207,6 +207,23 @@ func ListChannel(user *authm.Account, realmId ...uint) ([]models.Channel, error)
 	return channels, nil
 }
 
+func ListChannelPublic(realmId ...uint) ([]models.Channel, error) {
+	var channels []models.Channel
+	tx := database.C
+	tx = tx.Where("is_public = true")
+	if len(realmId) > 0 {
+		tx = tx.Where("realm_id = ?", realmId)
+	}
+
+	tx = PreloadDirectChannelMembers(tx)
+
+	if err := tx.Find(&channels).Error; err != nil {
+		return channels, err
+	}
+
+	return channels, nil
+}
+
 func ListChannelWithUser(user authm.Account, realmId ...uint) ([]models.Channel, error) {
 	var channels []models.Channel
 	tx := database.C.Where(&models.Channel{AccountID: user.ID})

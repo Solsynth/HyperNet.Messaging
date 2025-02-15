@@ -76,6 +76,21 @@ func listChannel(c *fiber.Ctx) error {
 	return c.JSON(channels)
 }
 
+func listPublicChannel(c *fiber.Ctx) error {
+	var err error
+	var channels []models.Channel
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		channels, err = services.ListChannelPublic(val.ID)
+	} else {
+		channels, err = services.ListChannelPublic()
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(channels)
+}
+
 func listOwnedChannel(c *fiber.Ctx) error {
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
