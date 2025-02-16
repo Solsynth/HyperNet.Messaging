@@ -274,13 +274,7 @@ func NewChannel(channel models.Channel) (models.Channel, error) {
 	return channel, err
 }
 
-func EditChannel(channel models.Channel, alias, name, description string, isPublic, isCommunity bool) (models.Channel, error) {
-	channel.Alias = alias
-	channel.Name = name
-	channel.Description = description
-	channel.IsPublic = isPublic
-	channel.IsCommunity = isCommunity
-
+func EditChannel(channel models.Channel) (models.Channel, error) {
 	err := database.C.Save(&channel).Error
 
 	if err == nil {

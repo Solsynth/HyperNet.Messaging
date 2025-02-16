@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
@@ -203,11 +204,12 @@ func editChannel(c *fiber.Ctx) error {
 	id, _ := c.ParamsInt("channelId", 0)
 
 	var data struct {
-		Alias       string `json:"alias" validate:"required,min=4,max=32"`
-		Name        string `json:"name" validate:"required"`
-		Description string `json:"description"`
-		IsPublic    bool   `json:"is_public"`
-		IsCommunity bool   `json:"is_community"`
+		Alias           string  `json:"alias" validate:"required,min=4,max=32"`
+		Name            string  `json:"name" validate:"required"`
+		Description     string  `json:"description"`
+		IsPublic        bool    `json:"is_public"`
+		IsCommunity     bool    `json:"is_community"`
+		NewBelongsRealm *string `json:"new_belongs_realm"`
 	}
 
 	if err := exts.BindAndValidate(c, &data); err != nil {
@@ -241,7 +243,32 @@ func editChannel(c *fiber.Ctx) error {
 		}
 	}
 
-	channel, err := services.EditChannel(channel, data.Alias, data.Name, data.Description, data.IsPublic, data.IsCommunity)
+	if data.NewBelongsRealm != nil {
+		if *data.NewBelongsRealm == "global" {
+			channel.RealmID = nil
+		} else {
+			realm, err := authkit.GetRealmByAlias(gap.Nx, *data.NewBelongsRealm)
+			if err != nil {
+				return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("requested channel with realm, but realm was not found: %v", err))
+			} else {
+				if info, err := authkit.GetRealmMember(gap.Nx, realm.ID, user.ID); err != nil {
+					return fiber.NewError(fiber.StatusForbidden, "you must be a part of that realm then can transfer channel related to it")
+				} else if info.PowerLevel < 50 {
+					return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of that realm then can transfer channel related to it")
+				} else {
+					channel.RealmID = &realm.ID
+				}
+			}
+		}
+	}
+
+	channel.Alias = data.Alias
+	channel.Name = data.Name
+	channel.Description = data.Description
+	channel.IsPublic = data.IsPublic
+	channel.IsCommunity = data.IsCommunity
+
+	channel, err := services.EditChannel(channel)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
