@@ -2,14 +2,12 @@ package api
 
 import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"strconv"
-	"strings"
-
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
@@ -45,31 +43,6 @@ func listChannelMembers(c *fiber.Ctx) error {
 			"count": count,
 			"data":  members,
 		})
-	}
-}
-
-func getChannelProfileOfMyself(c *fiber.Ctx) error {
-	alias := c.Params("channel")
-	if err := sec.EnsureAuthenticated(c); err != nil {
-		return err
-	}
-	user := c.Locals("user").(authm.Account)
-
-	var err error
-	var channel models.Channel
-	if val, ok := c.Locals("realm").(authm.Realm); ok {
-		channel, err = services.GetChannelWithAlias(alias, val.ID)
-	} else {
-		channel, err = services.GetChannelWithAlias(alias)
-	}
-	if err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	}
-
-	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
-	} else {
-		return c.JSON(member)
 	}
 }
 
@@ -132,6 +105,11 @@ func removeChannelMember(c *fiber.Ctx) error {
 	alias := c.Params("channel")
 	memberId := c.Params("memberId")
 
+	numericId, err := strconv.Atoi(memberId)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid member id")
+	}
+
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
 		Alias: alias,
@@ -144,31 +122,17 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 
 	var member models.ChannelMember
-	if strings.EqualFold(memberId, "me") {
-		if err := database.C.Where(&models.ChannelMember{
-			BaseModel: cruda.BaseModel{ID: user.ID},
-			ChannelID: channel.ID,
-		}).First(&member).Error; err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		}
-	} else {
-		numericId, err := strconv.Atoi(memberId)
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid member id")
-		}
+	if me, err := services.GetChannelMember(user, channel.ID); err != nil {
+		return fiber.NewError(fiber.StatusForbidden, err.Error())
+	} else if me.PowerLevel < 50 {
+		return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member from it")
+	}
 
-		if me, err := services.GetChannelMember(user, channel.ID); err != nil {
-			return fiber.NewError(fiber.StatusForbidden, err.Error())
-		} else if me.PowerLevel < 50 {
-			return fiber.NewError(fiber.StatusForbidden, "you must be a moderator of a channel to remove member from it")
-		}
-
-		if err := database.C.Where(&models.ChannelMember{
-			BaseModel: cruda.BaseModel{ID: uint(numericId)},
-			ChannelID: channel.ID,
-		}).First(&member).Error; err != nil {
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		}
+	if err := database.C.Where(&models.ChannelMember{
+		BaseModel: cruda.BaseModel{ID: uint(numericId)},
+		ChannelID: channel.ID,
+	}).First(&member).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
 	if err := services.RemoveChannelMember(member, channel); err != nil {
@@ -178,7 +142,40 @@ func removeChannelMember(c *fiber.Ctx) error {
 	}
 }
 
-func editChannelProfileOfMyself(c *fiber.Ctx) error {
+func deleteChannelIdentity(c *fiber.Ctx) error {
+	if err := sec.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(authm.Account)
+	alias := c.Params("channel")
+
+	var err error
+	var channel models.Channel
+	if val, ok := c.Locals("realm").(authm.Realm); ok {
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
+	} else {
+		channel, err = services.GetChannelWithAlias(alias)
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	var membership models.ChannelMember
+	if err := database.C.Where(&models.ChannelMember{
+		ChannelID: channel.ID,
+		AccountID: user.ID,
+	}).First(&membership).Error; err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if err = services.RemoveChannelMember(membership, channel); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else {
+		return c.JSON(membership)
+	}
+}
+
+func editChannelIdentity(c *fiber.Ctx) error {
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
@@ -226,7 +223,7 @@ func editChannelProfileOfMyself(c *fiber.Ctx) error {
 	}
 }
 
-func editChannelNotifyLevelOfMyself(c *fiber.Ctx) error {
+func editChannelNotifyLevel(c *fiber.Ctx) error {
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}

@@ -35,26 +35,28 @@ func getChannel(c *fiber.Ctx) error {
 }
 
 func getChannelIdentity(c *fiber.Ctx) error {
+	alias := c.Params("channel")
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
 	}
 	user := c.Locals("user").(authm.Account)
-	alias := c.Params("channel")
 
 	var err error
-	var member models.ChannelMember
-
+	var channel models.Channel
 	if val, ok := c.Locals("realm").(authm.Realm); ok {
-		_, member, err = services.GetChannelIdentity(alias, user.ID, val)
+		channel, err = services.GetChannelWithAlias(alias, val.ID)
 	} else {
-		_, member, err = services.GetChannelIdentity(alias, user.ID)
+		channel, err = services.GetChannelWithAlias(alias)
 	}
-
 	if err != nil {
-		return c.SendStatus(fiber.StatusForbidden)
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
 
-	return c.JSON(member)
+	if member, err := services.GetChannelMember(user, channel.ID); err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	} else {
+		return c.JSON(member)
+	}
 }
 
 func listChannel(c *fiber.Ctx) error {
