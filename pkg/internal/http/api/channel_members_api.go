@@ -134,8 +134,7 @@ func removeChannelMember(c *fiber.Ctx) error {
 
 	var channel models.Channel
 	if err := database.C.Where(&models.Channel{
-		Alias:     alias,
-		AccountID: user.ID,
+		Alias: alias,
 	}).First(&channel).Error; err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	} else if channel.Type == models.ChannelTypeDirect {
