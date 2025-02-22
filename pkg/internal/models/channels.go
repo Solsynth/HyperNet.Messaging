@@ -56,11 +56,12 @@ type ChannelMember struct {
 	Nick   string  `json:"nick"`
 	Avatar *string `json:"avatar"`
 
-	ChannelID  uint        `json:"channel_id"`
-	AccountID  uint        `json:"account_id"`
-	Channel    Channel     `json:"channel"`
-	Notify     NotifyLevel `json:"notify"`
-	PowerLevel int         `json:"power_level"`
+	ChannelID     uint        `json:"channel_id"`
+	AccountID     uint        `json:"account_id"`
+	Channel       Channel     `json:"channel"`
+	Notify        NotifyLevel `json:"notify"`
+	PowerLevel    int         `json:"power_level"`
+	ReadingAnchor *int        `json:"reading_anchor"`
 
 	Calls  []Call  `json:"calls" gorm:"foreignKey:FounderID"`
 	Events []Event `json:"events" gorm:"foreignKey:SenderID"`
