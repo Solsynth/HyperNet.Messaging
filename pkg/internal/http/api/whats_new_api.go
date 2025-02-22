@@ -20,7 +20,7 @@ func getWhatsNew(c *fiber.Ctx) error {
 	}
 	if err := database.C.Table("channel_members cm").
 		Select("cm.channel_id, COUNT(m.id) AS unread_message_count").
-		Joins("JOIN messages m ON m.channel_id = cm.channel_id").
+		Joins("JOIN events m ON m.channel_id = cm.channel_id").
 		Where("m.id > cm.reading_anchor AND cm.account_id = ?", user.ID).
 		Group("cm.channel_id").
 		Scan(&result).Error; err != nil {
