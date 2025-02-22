@@ -25,7 +25,7 @@ func FlushReadingAnchor() {
 		if err := database.C.Model(&models.ChannelMember{}).
 			Where("id = ?", k).
 			Updates(map[string]any{
-				"reading_anchor": gorm.Expr("GREATEST(reading_anchor, ?)", v),
+				"reading_anchor": gorm.Expr("GREATEST(COALESCE(reading_anchor, 0), ?)", v),
 			}).Error; err != nil {
 			log.Error().Err(err).Msg("An error occurred when flushing reading anchor...")
 			return
