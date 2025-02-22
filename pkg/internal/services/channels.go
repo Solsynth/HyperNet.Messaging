@@ -228,7 +228,9 @@ func ListChannelWithUser(user authm.Account, realmId ...uint) ([]models.Channel,
 	var channels []models.Channel
 	tx := database.C.Where(&models.Channel{AccountID: user.ID})
 	if len(realmId) > 0 {
-		tx = tx.Where("realm_id = ?", realmId)
+		if realmId[0] != 0 {
+			tx = tx.Where("realm_id = ?", realmId)
+		}
 	}
 
 	tx = PreloadDirectChannelMembers(tx)
@@ -255,7 +257,9 @@ func ListAvailableChannel(tx *gorm.DB, user authm.Account, realmId ...uint) ([]m
 
 	tx = tx.Where("id IN ?", idx)
 	if len(realmId) > 0 {
-		tx = tx.Where("realm_id = ?", realmId)
+		if realmId[0] != 0 {
+			tx = tx.Where("realm_id = ?", realmId)
+		}
 	} else {
 		tx = tx.Where("realm_id IS NULL")
 	}

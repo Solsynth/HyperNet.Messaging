@@ -114,6 +114,20 @@ func listOwnedChannel(c *fiber.Ctx) error {
 	return c.JSON(channels)
 }
 
+func listOwnedChannelGlobalWide(c *fiber.Ctx) error {
+	if err := sec.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(authm.Account)
+
+	channels, err := services.ListChannelWithUser(user, 0)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(channels)
+}
+
 func listAvailableChannel(c *fiber.Ctx) error {
 	if err := sec.EnsureAuthenticated(c); err != nil {
 		return err
@@ -135,6 +149,20 @@ func listAvailableChannel(c *fiber.Ctx) error {
 	} else {
 		channels, err = services.ListAvailableChannel(tx, user)
 	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(channels)
+}
+
+func listAvailableChannelGlobalWide(c *fiber.Ctx) error {
+	if err := sec.EnsureAuthenticated(c); err != nil {
+		return err
+	}
+	user := c.Locals("user").(authm.Account)
+
+	channels, err := services.ListAvailableChannel(database.C, user, 0)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
