@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
-	"github.com/fatih/color"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
+	"github.com/fatih/color"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/grpc"
@@ -83,7 +84,7 @@ func main() {
 	// Configure timed tasks
 	quartz := cron.New(cron.WithLogger(cron.VerbosePrintfLogger(&log.Logger)))
 	quartz.AddFunc("@every 60m", services.DoAutoDatabaseCleanup)
-	quartz.AddFunc("@every 1m", services.FlushReadingAnchor)
+	quartz.AddFunc("@every 30s", services.FlushReadingAnchor)
 	quartz.Start()
 
 	// Messages
