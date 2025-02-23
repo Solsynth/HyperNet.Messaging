@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 )
@@ -36,9 +37,9 @@ func (v Channel) DisplayText() string {
 		return "DM"
 	}
 	if v.Realm != nil {
-		return fmt.Sprintf("%s, %s", v.Alias, v.Realm.Alias)
+		return fmt.Sprintf("%s, %s", v.Name, v.Realm.Alias)
 	}
-	return fmt.Sprintf("%s", v.Alias)
+	return fmt.Sprintf("%s", v.Name)
 }
 
 type NotifyLevel = int8
