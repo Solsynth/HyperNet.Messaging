@@ -37,7 +37,7 @@ func (v Channel) DisplayText() string {
 		return "DM"
 	}
 	if v.Realm != nil {
-		return fmt.Sprintf("%s, %s", v.Name, v.Realm.Alias)
+		return fmt.Sprintf("%s, %s", v.Name, v.Realm.Name)
 	}
 	return fmt.Sprintf("%s", v.Name)
 }
