@@ -26,6 +26,7 @@ func MapAPIs(app *fiber.App, baseURL string) {
 			channels.Get("/:channel/members/me", getChannelIdentity)
 			channels.Put("/:channel/me", editChannelIdentity)
 			channels.Put("/:channel/me/notify", editChannelNotifyLevel)
+			channels.Put("/:channel/members/me/notify", editChannelNotifyLevel)
 			channels.Delete("/:channel/me", deleteChannelIdentity)
 
 			channels.Post("/", createChannel)
