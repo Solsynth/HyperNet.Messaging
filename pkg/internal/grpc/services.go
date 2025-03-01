@@ -2,9 +2,10 @@ package grpc
 
 import (
 	"context"
+
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"git.solsynth.dev/hypernet/nexus/pkg/proto"
-	"strconv"
+	jsoniter "github.com/json-iterator/go"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 )
@@ -19,19 +20,17 @@ func (v *Server) BroadcastEvent(ctx context.Context, in *proto.EventInfo) (*prot
 		}
 		switch resType {
 		case "account":
-			id, ok := data["id"].(string)
-			if !ok {
-				break
+			var data struct {
+				ID int `json:"id"`
 			}
-			numericId, err := strconv.Atoi(id)
-			if err != nil {
+			if err := jsoniter.Unmarshal(in.GetData(), &data); err != nil {
 				break
 			}
 			tx := database.C.Begin()
 			for _, model := range database.AutoMaintainRange {
 				switch model.(type) {
 				default:
-					tx.Delete(model, "account_id = ?", numericId)
+					tx.Delete(model, "account_id = ?", data)
 				}
 			}
 			tx.Commit()
