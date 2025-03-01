@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"github.com/rs/zerolog/log"
-	"time"
 
 	"github.com/samber/lo"
 
@@ -21,7 +23,6 @@ func PushCommand(userId uint, task nex.WebSocketPackage) {
 		UserId: lo.ToPtr(uint64(userId)),
 		Body:   task.Marshal(),
 	})
-
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to push websocket command to nexus...")
 	}
@@ -36,10 +37,12 @@ func PushCommandBatch(userId []uint64, task nex.WebSocketPackage) []uint64 {
 		UserId: userId,
 		Body:   task.Marshal(),
 	})
-
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to push websocket command to nexus in batches...")
 	}
 
-	return resp.GetSuccessList()
+	return lo.Map(resp.GetSuccessList(), func(item string, _ int) uint64 {
+		val, _ := strconv.ParseUint(item, 10, 64)
+		return val
+	})
 }
