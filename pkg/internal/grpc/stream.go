@@ -76,7 +76,7 @@ func (v *Server) PushStream(_ context.Context, request *proto.PushStreamRequest)
 		action := strings.Split(in.Action, ".")[1]
 		switch action {
 		case "subscribe":
-			services.SubscribeChannel(uint(request.GetUserId()), data.ChannelID)
+			services.SubscribeChannel(uint(request.GetUserId()), data.ChannelID, request.GetClientId())
 		case "unsubscribe":
 			services.UnsubscribeChannel(uint(request.GetUserId()), data.ChannelID)
 		case "unsubscribeAll":

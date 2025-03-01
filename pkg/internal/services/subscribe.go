@@ -2,8 +2,8 @@ package services
 
 import "sync"
 
-// ChannelID -> UserID
-var subscribeInfo = make(map[uint]map[uint]bool)
+// ChannelID -> UserID -> Client ID
+var subscribeInfo = make(map[uint]map[uint]string)
 var subscribeLock sync.Mutex
 
 // If user subscribed to a channel
@@ -19,13 +19,13 @@ func CheckSubscribed(UserID uint, ChannelID uint) bool {
 	return false
 }
 
-func SubscribeChannel(userId uint, channelId uint) {
+func SubscribeChannel(userId uint, channelId uint, clientId string) {
 	subscribeLock.Lock()
 	defer subscribeLock.Unlock()
 	if _, ok := subscribeInfo[channelId]; !ok {
-		subscribeInfo[channelId] = make(map[uint]bool)
+		subscribeInfo[channelId] = make(map[uint]string)
 	}
-	subscribeInfo[channelId][userId] = true
+	subscribeInfo[channelId][userId] = clientId
 }
 
 func UnsubscribeChannel(userId uint, channelId uint) {
@@ -48,4 +48,16 @@ func UnsubscribeAllWithChannels(channelId uint) {
 	subscribeLock.Lock()
 	defer subscribeLock.Unlock()
 	delete(subscribeInfo, channelId)
+}
+
+func UnsubscribeAllWithClient(clientId string) {
+	subscribeLock.Lock()
+	defer subscribeLock.Unlock()
+	for _, v := range subscribeInfo {
+		for k, item := range v {
+			if item == clientId {
+				delete(v, k)
+			}
+		}
+	}
 }
