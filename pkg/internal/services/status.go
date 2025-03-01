@@ -3,15 +3,16 @@ package services
 import (
 	"context"
 	"fmt"
+
 	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
-	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/marshaler"
 	"github.com/eko/gocache/lib/v4/store"
+	"github.com/samber/lo"
+	"github.com/spf13/viper"
 )
 
 type statusQueryCacheEntry struct {
@@ -76,14 +77,18 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		)
 	}
 
-	sc := proto.NewStreamServiceClient(gap.Nx.GetNexusGrpcConn())
-	_, err := sc.PushStreamBatch(context.Background(), &proto.PushStreamBatchRequest{
-		UserId: broadcastTarget,
-		Body: nex.WebSocketPackage{
-			Action:  "status.typing",
-			Payload: data,
-		}.Marshal(),
+	broadcastTarget = lo.Filter(broadcastTarget, func(item uint64, index int) bool {
+		if !viper.GetBool("performance.passive_user_optimize") {
+			// Leave this for backward compatibility
+			return true
+		}
+		return CheckSubscribed(uint(item), channelId)
 	})
 
-	return err
+	PushCommandBatch(broadcastTarget, nex.WebSocketPackage{
+		Action:  "status.typing",
+		Payload: data,
+	})
+
+	return nil
 }

@@ -117,10 +117,6 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 			if member.ID != call.Founder.ID {
 				pendingUsers = append(pendingUsers, uint64(member.AccountID))
 			}
-			PushCommand(member.AccountID, nex.WebSocketPackage{
-				Action:  "calls.new",
-				Payload: call,
-			})
 		}
 
 		channel, _ = GetChannel(channel.ID)
@@ -130,6 +126,13 @@ func NewCall(channel models.Channel, founder models.ChannelMember) (models.Call,
 				channel.Realm = &realm
 			}
 		}
+
+		// The call notification is not happen very often
+		// So we don't need to optimize the performance for passive users
+		PushCommandBatch(pendingUsers, nex.WebSocketPackage{
+			Action:  "calls.new",
+			Payload: call,
+		})
 
 		err = authkit.NotifyUserBatch(
 			gap.Nx,
@@ -172,12 +175,17 @@ func EndCall(call models.Call) (models.Call, error) {
 		ChannelID: call.ChannelID,
 	}).Find(&members).Error; err == nil {
 		call, _ = GetCall(call.Channel, call.ID)
+		var pendingUsers []uint64
 		for _, member := range members {
-			PushCommand(member.AccountID, nex.WebSocketPackage{
-				Action:  "calls.end",
-				Payload: call,
-			})
+			if member.ID != call.Founder.ID {
+				pendingUsers = append(pendingUsers, uint64(member.AccountID))
+			}
 		}
+
+		PushCommandBatch(pendingUsers, nex.WebSocketPackage{
+			Action:  "calls.end",
+			Payload: call,
+		})
 	}
 
 	return call, nil

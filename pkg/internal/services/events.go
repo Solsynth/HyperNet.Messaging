@@ -15,6 +15,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
+	"github.com/spf13/viper"
 )
 
 func CountEvent(channel models.Channel) int64 {
@@ -89,7 +90,13 @@ func NewEvent(event models.Event) (models.Event, error) {
 		log.Error().Err(err).Msg("Failed to fetch event, the notifying of new event was terminated...")
 		return event, err
 	}
-	idxList := lo.Map(members, func(item models.ChannelMember, index int) uint64 {
+	idxList := lo.Map(lo.Filter(members, func(item models.ChannelMember, index int) bool {
+		if !viper.GetBool("performance.passive_user_optimize") {
+			// Leave this for backward compatibility
+			return true
+		}
+		return CheckSubscribed(item.AccountID, event.ChannelID)
+	}), func(item models.ChannelMember, index int) uint64 {
 		return uint64(item.AccountID)
 	})
 	_ = PushCommandBatch(idxList, nex.WebSocketPackage{
@@ -120,6 +127,9 @@ func NotifyMessageEvent(members []models.ChannelMember, event models.Event) {
 	var mentionedUsers []uint64
 
 	for _, member := range members {
+		if CheckSubscribed(member.AccountID, event.ChannelID) {
+			continue
+		}
 		if member.ID != event.SenderID {
 			switch member.Notify {
 			case models.NotifyLevelNone:

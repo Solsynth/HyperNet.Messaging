@@ -297,6 +297,8 @@ func EditChannel(channel models.Channel) (models.Channel, error) {
 
 func DeleteChannel(channel models.Channel) error {
 	if err := database.C.Delete(&channel).Error; err == nil {
+		UnsubscribeAllWithChannels(channel.ID)
+
 		database.C.Where("channel_id = ?", channel.ID).Delete(&models.Event{})
 
 		cacheManager := cache.New[any](localCache.S)

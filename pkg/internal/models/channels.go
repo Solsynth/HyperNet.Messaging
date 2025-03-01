@@ -39,7 +39,7 @@ func (v Channel) DisplayText() string {
 	if v.Realm != nil {
 		return fmt.Sprintf("%s, %s", v.Name, v.Realm.Name)
 	}
-	return fmt.Sprintf("%s", v.Name)
+	return v.Name
 }
 
 type NotifyLevel = int8

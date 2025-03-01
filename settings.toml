@@ -5,6 +5,9 @@ grpc_bind = "0.0.0.0:7447"
 
 nexus_addr = "localhost:7001"
 
+[performance]
+passive_user_optimize = true
+
 [debug]
 database = false
 print_routes = false

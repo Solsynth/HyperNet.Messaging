@@ -3,6 +3,8 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
@@ -50,6 +52,35 @@ func (v *Server) PushStream(_ context.Context, request *proto.PushStreamRequest)
 				}.Marshal(),
 			})
 			break
+		}
+	case "events.subscribe", "events.unsubscribe", "events.unsubscribeAll":
+		var data struct {
+			ChannelID uint `json:"channel_id" validate:"required"`
+		}
+
+		err := jsoniter.Unmarshal(in.RawPayload(), &data)
+		if err == nil {
+			err = exts.ValidateStruct(data)
+		}
+		if err != nil {
+			_, _ = sc.PushStream(context.Background(), &proto.PushStreamRequest{
+				ClientId: request.ClientId,
+				Body: nex.WebSocketPackage{
+					Action:  "error",
+					Message: fmt.Sprintf("unable parse payload: %v", err),
+				}.Marshal(),
+			})
+			break
+		}
+
+		action := strings.Split(in.Action, ".")[1]
+		switch action {
+		case "subscribe":
+			services.SubscribeChannel(uint(request.GetUserId()), data.ChannelID)
+		case "unsubscribe":
+			services.UnsubscribeChannel(uint(request.GetUserId()), data.ChannelID)
+		case "unsubscribeAll":
+			services.UnsubscribeAll(uint(request.GetUserId()))
 		}
 	case "events.read":
 		var data struct {
