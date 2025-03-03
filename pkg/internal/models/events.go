@@ -30,6 +30,7 @@ type Event struct {
 
 type EventMessageBody struct {
 	Text           string   `json:"text,omitempty"`
+	KeyPair        string   `json:"keypair_id,omitempty"`
 	Algorithm      string   `json:"algorithm,omitempty"`
 	Attachments    []string `json:"attachments,omitempty"`
 	QuoteEventID   *uint    `json:"quote_event,omitempty"`
