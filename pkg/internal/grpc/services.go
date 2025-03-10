@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 )
 
@@ -43,10 +44,24 @@ func (v *Server) BroadcastEvent(ctx context.Context, in *proto.EventInfo) (*prot
 			for _, model := range database.AutoMaintainRange {
 				switch model.(type) {
 				default:
-					tx.Delete(model, "account_id = ?", data)
+					tx.Delete(model, "account_id = ?", data.ID)
 				}
 			}
 			tx.Commit()
+		case "realm":
+			var data struct {
+				ID int `json:"id"`
+			}
+			if err := jsoniter.Unmarshal(in.GetData(), &data); err != nil {
+				break
+			}
+			var channels []models.Channel
+			if err := database.C.Where("realm_id = ?", data.ID).Find(&channels).Error; err != nil {
+				break
+			}
+			for _, channel := range channels {
+				_ = services.DeleteChannel(channel)
+			}
 		}
 	}
 
