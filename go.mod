@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	git.solsynth.dev/hypernet/nexus v0.0.0-20250301065153-8ac88413e0e1
+	git.solsynth.dev/hypernet/paperclip v0.0.0-20250310151112-1d866f317f47
 	git.solsynth.dev/hypernet/passport v0.0.0-20250304125607-1ed9816b12c4
 	git.solsynth.dev/hypernet/pusher v0.0.0-20250216145944-5fb769823a88
 	github.com/dgraph-io/ristretto v0.2.0

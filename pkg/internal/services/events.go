@@ -7,6 +7,8 @@ import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
+	"git.solsynth.dev/hypernet/paperclip/pkg/filekit"
+	"git.solsynth.dev/hypernet/paperclip/pkg/proto"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit"
 
@@ -113,6 +115,12 @@ func NewEvent(event models.Event) (models.Event, error) {
 			}
 		}
 		go NotifyMessageEvent(members, event)
+	}
+
+	if val, ok := event.Body["attachments"].([]string); ok && len(val) > 0 {
+		filekit.CountAttachmentUsage(gap.Nx, &proto.UpdateUsageRequest{
+			Rid: val,
+		})
 	}
 
 	return event, nil
