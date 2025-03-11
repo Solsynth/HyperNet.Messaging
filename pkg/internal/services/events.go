@@ -87,6 +87,13 @@ func NewEvent(event models.Event) (models.Event, error) {
 		return event, nil
 	}
 
+	if val, ok := event.Body["attachments"].([]string); ok && len(val) > 0 {
+		filekit.CountAttachmentUsage(gap.Nx, &proto.UpdateUsageRequest{
+			Rid:   val,
+			Delta: 1,
+		})
+	}
+
 	event, err := GetEvent(event.ChannelID, event.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch event, the notifying of new event was terminated...")
@@ -115,12 +122,6 @@ func NewEvent(event models.Event) (models.Event, error) {
 			}
 		}
 		go NotifyMessageEvent(members, event)
-	}
-
-	if val, ok := event.Body["attachments"].([]string); ok && len(val) > 0 {
-		filekit.CountAttachmentUsage(gap.Nx, &proto.UpdateUsageRequest{
-			Rid: val,
-		})
 	}
 
 	return event, nil
