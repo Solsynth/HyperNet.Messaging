@@ -300,6 +300,7 @@ func DeleteChannel(channel models.Channel) error {
 		UnsubscribeAllWithChannels(channel.ID)
 
 		database.C.Where("channel_id = ?", channel.ID).Delete(&models.Event{})
+		database.C.Where("channel_id = ?", channel.ID).Delete(&models.ChannelMember{})
 
 		cacheManager := cache.New[any](localCache.S)
 		marshal := marshaler.New(cacheManager)
