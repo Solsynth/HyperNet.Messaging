@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
@@ -46,7 +47,7 @@ func GetChannelMember(user authm.Account, channelId uint) (models.ChannelMember,
 
 	if err := database.C.
 		Where(&models.ChannelMember{AccountID: user.ID, ChannelID: channelId}).
-		Find(&member).Error; err != nil {
+		First(&member).Error; err != nil {
 		return member, err
 	}
 
