@@ -1,9 +1,10 @@
 package http
 
 import (
+	"strings"
+
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
-	"strings"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/api"
 	"github.com/gofiber/fiber/v2"
@@ -31,6 +32,7 @@ func NewServer() *App {
 		JSONEncoder:           jsoniter.ConfigCompatibleWithStandardLibrary.Marshal,
 		JSONDecoder:           jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal,
 		BodyLimit:             50 * 1024 * 1024,
+		ReadBufferSize:        5 * 1024 * 1024, // 5MB for large JWT
 		EnablePrintRoutes:     viper.GetBool("debug.print_routes"),
 	})
 
