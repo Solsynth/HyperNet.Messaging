@@ -3,7 +3,7 @@ module git.solsynth.dev/hypernet/messaging
 go 1.23.2
 
 require (
-	git.solsynth.dev/hypernet/nexus v0.0.0-20250329053929-488793a2dc56
+	git.solsynth.dev/hypernet/nexus v0.0.0-20250329075932-d5422ab5b04c
 	git.solsynth.dev/hypernet/paperclip v0.0.0-20250310151112-1d866f317f47
 	git.solsynth.dev/hypernet/passport v0.0.0-20250315083747-32e91e26013c
 	git.solsynth.dev/hypernet/pusher v0.0.0-20250216145944-5fb769823a88
