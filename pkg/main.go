@@ -15,7 +15,7 @@ import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"github.com/robfig/cron/v3"
 
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/web"
 
 	pkg "git.solsynth.dev/hypernet/messaging/pkg/internal"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
@@ -57,7 +57,7 @@ func main() {
 	if reader, err := sec.NewInternalTokenReader(viper.GetString("security.internal_public_key")); err != nil {
 		log.Error().Err(err).Msg("An error occurred when reading internal public key for jwt. Authentication related features will be disabled.")
 	} else {
-		http.IReader = reader
+		web.IReader = reader
 		log.Info().Msg("Internal jwt public key loaded.")
 	}
 
@@ -77,7 +77,7 @@ func main() {
 	services.SetupLiveKit()
 
 	// Server
-	go http.NewServer().Listen()
+	go web.NewServer().Listen()
 
 	go grpc.NewGrpc().Listen()
 

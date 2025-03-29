@@ -7,7 +7,7 @@ import (
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/web/exts"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"

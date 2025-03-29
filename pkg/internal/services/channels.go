@@ -19,8 +19,8 @@ import (
 )
 
 type channelIdentityCacheEntry struct {
-	Channel       models.Channel
-	ChannelMember models.ChannelMember
+	Channel       models.Channel       `json:"channel"`
+	ChannelMember models.ChannelMember `json:"channel_member"`
 }
 
 func GetChannelIdentityCacheKey(channel string, user uint, realm ...uint) string {

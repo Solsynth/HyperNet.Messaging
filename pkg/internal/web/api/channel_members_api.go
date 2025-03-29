@@ -2,7 +2,7 @@ package api
 
 import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/web/exts"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/cruda"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"

@@ -1,4 +1,4 @@
-package http
+package web
 
 import (
 	"strings"
@@ -6,7 +6,7 @@ import (
 	"git.solsynth.dev/hypernet/nexus/pkg/nex/sec"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/api"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/web/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/idempotency"

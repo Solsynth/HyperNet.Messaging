@@ -5,7 +5,7 @@ import (
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
 	"strings"
 
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/web/exts"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"github.com/gofiber/fiber/v2"

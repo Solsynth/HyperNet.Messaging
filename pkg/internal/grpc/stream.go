@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/http/exts"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/web/exts"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/services"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
 	"git.solsynth.dev/hypernet/nexus/pkg/proto"
