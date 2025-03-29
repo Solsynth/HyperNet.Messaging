@@ -7,9 +7,6 @@ require (
 	git.solsynth.dev/hypernet/paperclip v0.0.0-20250310151112-1d866f317f47
 	git.solsynth.dev/hypernet/passport v0.0.0-20250315083747-32e91e26013c
 	git.solsynth.dev/hypernet/pusher v0.0.0-20250216145944-5fb769823a88
-	github.com/dgraph-io/ristretto v0.2.0
-	github.com/eko/gocache/lib/v4 v4.2.0
-	github.com/eko/gocache/store/ristretto/v4 v4.2.2
 	github.com/fatih/color v1.18.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/gofiber/fiber/v2 v2.52.6
@@ -37,9 +34,10 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/eapache/channels v1.1.0 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
+	github.com/eko/gocache/lib/v4 v4.2.0 // indirect
+	github.com/eko/gocache/store/redis/v4 v4.2.2 // indirect
 	github.com/frostbyte73/core v0.0.10 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
@@ -97,7 +95,6 @@ require (
 	github.com/pion/transport/v2 v2.2.4 // indirect
 	github.com/pion/turn/v2 v2.1.3 // indirect
 	github.com/pion/webrtc/v3 v3.2.28 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
@@ -119,8 +116,6 @@ require (
 	github.com/twitchtv/twirp v8.1.3+incompatible // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.59.0 // indirect
-	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
-	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect

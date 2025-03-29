@@ -1,17 +1,15 @@
 package services
 
 import (
-	"context"
 	"fmt"
 	"regexp"
+	"time"
 
-	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cachekit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
-	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/lib/v4/marshaler"
-	"github.com/eko/gocache/lib/v4/store"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
@@ -23,7 +21,7 @@ type channelIdentityCacheEntry struct {
 	ChannelMember models.ChannelMember `json:"channel_member"`
 }
 
-func GetChannelIdentityCacheKey(channel string, user uint, realm ...uint) string {
+func KgChannelIdentityCache(channel string, user uint, realm ...uint) string {
 	if len(realm) > 0 {
 		return fmt.Sprintf("channel-identity-%s#%d@%d", channel, user, realm)
 	} else {
@@ -31,18 +29,16 @@ func GetChannelIdentityCacheKey(channel string, user uint, realm ...uint) string
 	}
 }
 
-func CacheChannelIdentityCache(channel models.Channel, member models.ChannelMember, user uint, realm ...uint) {
-	key := GetChannelIdentityCacheKey(channel.Alias, user, realm...)
+func CacheChannelIdentity(channel models.Channel, member models.ChannelMember, user uint, realm ...uint) {
+	key := KgChannelIdentityCache(channel.Alias, user, realm...)
 
-	cacheManager := cache.New[any](localCache.S)
-	marshal := marshaler.New(cacheManager)
-	contx := context.Background()
-
-	_ = marshal.Set(
-		contx,
+	cachekit.Set(
+		gap.Ca,
 		key,
 		channelIdentityCacheEntry{channel, member},
-		store.WithTags([]string{"channel-identity", fmt.Sprintf("channel#%d", channel.ID), fmt.Sprintf("user#%d", user)}),
+		60*time.Minute,
+		fmt.Sprintf("channel#%d", channel.ID),
+		fmt.Sprintf("user#%d", user),
 	)
 }
 
@@ -60,37 +56,37 @@ func GetChannelIdentityWithID(id uint, user uint) (models.Channel, models.Channe
 }
 
 func GetChannelIdentity(alias string, user uint, realm ...authm.Realm) (models.Channel, models.ChannelMember, error) {
-	cacheManager := cache.New[any](localCache.S)
-	marshal := marshaler.New(cacheManager)
-	contx := context.Background()
-
 	var err error
 	var channel models.Channel
 	var member models.ChannelMember
 
 	hitCache := false
 	if len(realm) > 0 {
-		if val, err := marshal.Get(contx, GetChannelIdentityCacheKey(alias, user, realm[0].ID), new(channelIdentityCacheEntry)); err == nil {
-			entry := val.(*channelIdentityCacheEntry)
-			channel = entry.Channel
-			member = entry.ChannelMember
+		if val, err := cachekit.Get[channelIdentityCacheEntry](
+			gap.Ca,
+			KgChannelIdentityCache(alias, user, realm[0].ID),
+		); err == nil {
+			channel = val.Channel
+			member = val.ChannelMember
 			hitCache = true
 		}
 	} else {
-		if val, err := marshal.Get(contx, GetChannelIdentityCacheKey(alias, user), new(channelIdentityCacheEntry)); err == nil {
-			entry := val.(*channelIdentityCacheEntry)
-			channel = entry.Channel
-			member = entry.ChannelMember
+		if val, err := cachekit.Get[channelIdentityCacheEntry](
+			gap.Ca,
+			KgChannelIdentityCache(alias, user),
+		); err == nil {
+			channel = val.Channel
+			member = val.ChannelMember
 			hitCache = true
 		}
 	}
 	if !hitCache {
 		if len(realm) > 0 {
 			channel, member, err = GetAvailableChannelWithAlias(alias, user, realm[0].ID)
-			CacheChannelIdentityCache(channel, member, user, realm[0].ID)
+			CacheChannelIdentity(channel, member, user, realm[0].ID)
 		} else {
 			channel, member, err = GetAvailableChannelWithAlias(alias, user)
-			CacheChannelIdentityCache(channel, member, user)
+			CacheChannelIdentity(channel, member, user)
 		}
 	}
 
@@ -282,14 +278,7 @@ func EditChannel(channel models.Channel) (models.Channel, error) {
 	err := database.C.Save(&channel).Error
 
 	if err == nil {
-		cacheManager := cache.New[any](localCache.S)
-		marshal := marshaler.New(cacheManager)
-		contx := context.Background()
-
-		_ = marshal.Invalidate(
-			contx,
-			store.WithInvalidateTags([]string{fmt.Sprintf("channel#%d", channel.ID)}),
-		)
+		cachekit.DeleteByTags(gap.Ca, fmt.Sprintf("channel#%d", channel.ID))
 	}
 
 	return channel, err
@@ -302,14 +291,7 @@ func DeleteChannel(channel models.Channel) error {
 		database.C.Where("channel_id = ?", channel.ID).Delete(&models.Event{})
 		database.C.Where("channel_id = ?", channel.ID).Delete(&models.ChannelMember{})
 
-		cacheManager := cache.New[any](localCache.S)
-		marshal := marshaler.New(cacheManager)
-		contx := context.Background()
-
-		_ = marshal.Invalidate(
-			contx,
-			store.WithInvalidateTags([]string{fmt.Sprintf("channel#%d", channel.ID)}),
-		)
+		cachekit.DeleteByTags(gap.Ca, fmt.Sprintf("channel#%d", channel.ID))
 
 		return nil
 	} else {

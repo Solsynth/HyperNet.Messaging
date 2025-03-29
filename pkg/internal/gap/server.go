@@ -2,19 +2,25 @@ package gap
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cachekit"
 	"git.solsynth.dev/hypernet/nexus/pkg/proto"
 	"git.solsynth.dev/hypernet/pusher/pkg/pushkit/pushcon"
 	"github.com/samber/lo"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/spf13/viper"
 )
 
-var Nx *nex.Conn
-var Px *pushcon.Conn
+var (
+	Nx *nex.Conn
+	Px *pushcon.Conn
+	Ca *cachekit.CaConn
+)
 
 func InitializeToNexus() error {
 	grpcBind := strings.SplitN(viper.GetString("grpc_bind"), ":", 2)
@@ -47,6 +53,10 @@ func InitializeToNexus() error {
 		return fmt.Errorf("error during initialize pushcon: %v", err)
 	}
 
-	return err
+	Ca, err = cachekit.NewCaConn(Nx, 3*time.Second)
+	if err != nil {
+		return fmt.Errorf("error during initialize cachekit: %v", err)
+	}
 
+	return err
 }

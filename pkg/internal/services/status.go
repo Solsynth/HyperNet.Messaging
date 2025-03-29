@@ -1,16 +1,14 @@
 package services
 
 import (
-	"context"
 	"fmt"
+	"time"
 
-	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
+	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/models"
 	"git.solsynth.dev/hypernet/nexus/pkg/nex"
-	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/lib/v4/marshaler"
-	"github.com/eko/gocache/lib/v4/store"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cachekit"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 )
@@ -20,23 +18,21 @@ type statusQueryCacheEntry struct {
 	Data   any
 }
 
-func GetTypingStatusQueryCacheKey(channelId uint, userId uint) string {
-	return fmt.Sprintf("typing-status-query#%d;%d", channelId, userId)
+func KgTypingStatusCache(channelId uint, userId uint) string {
+	return fmt.Sprintf("chat-typing-status#%d@%d", userId, channelId)
 }
 
 func SetTypingStatus(channelId uint, userId uint) error {
 	var broadcastTarget []uint64
 	var data any
 
-	cacheManager := cache.New[any](localCache.S)
-	marshal := marshaler.New(cacheManager)
-	contx := context.Background()
-
 	hitCache := false
-	if val, err := marshal.Get(contx, GetTypingStatusQueryCacheKey(channelId, userId), new(statusQueryCacheEntry)); err == nil {
-		entry := val.(*statusQueryCacheEntry)
-		broadcastTarget = entry.Target
-		data = entry.Data
+	if val, err := cachekit.Get[statusQueryCacheEntry](
+		gap.Ca,
+		KgTypingStatusCache(channelId, userId),
+	); err == nil {
+		broadcastTarget = val.Target
+		data = val.Data
 		hitCache = true
 	}
 
@@ -69,11 +65,12 @@ func SetTypingStatus(channelId uint, userId uint) error {
 		}
 
 		// Cache queries
-		_ = marshal.Set(
-			contx,
-			GetTypingStatusQueryCacheKey(channelId, userId),
+		cachekit.Set(
+			gap.Ca,
+			KgTypingStatusCache(channelId, userId),
 			statusQueryCacheEntry{broadcastTarget, data},
-			store.WithTags([]string{"typing-status-query", fmt.Sprintf("channel#%d", channelId), fmt.Sprintf("user#%d", userId)}),
+			60*time.Minute,
+			fmt.Sprintf("channel#%d", channelId),
 		)
 	}
 

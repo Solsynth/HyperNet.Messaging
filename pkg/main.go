@@ -18,7 +18,6 @@ import (
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/web"
 
 	pkg "git.solsynth.dev/hypernet/messaging/pkg/internal"
-	"git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -66,11 +65,6 @@ func main() {
 		log.Fatal().Err(err).Msg("An error occurred when connect to database.")
 	} else if err := database.RunMigration(database.C); err != nil {
 		log.Fatal().Err(err).Msg("An error occurred when running database auto migration.")
-	}
-
-	// Initialize cache
-	if err := cache.NewStore(); err != nil {
-		log.Fatal().Err(err).Msg("An error occurred when initializing cache.")
 	}
 
 	// Connect other services

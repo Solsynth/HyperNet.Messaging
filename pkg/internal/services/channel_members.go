@@ -1,17 +1,13 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
-	localCache "git.solsynth.dev/hypernet/messaging/pkg/internal/cache"
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/gap"
+	"git.solsynth.dev/hypernet/nexus/pkg/nex/cachekit"
 	"git.solsynth.dev/hypernet/passport/pkg/authkit"
 	authm "git.solsynth.dev/hypernet/passport/pkg/authkit/models"
-	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/lib/v4/marshaler"
-	"github.com/eko/gocache/lib/v4/store"
 	"gorm.io/gorm"
 
 	"git.solsynth.dev/hypernet/messaging/pkg/internal/database"
@@ -81,16 +77,10 @@ func AddChannelMember(user authm.Account, target models.Channel) error {
 	err := database.C.Save(&member).Error
 
 	if err == nil {
-		cacheManager := cache.New[any](localCache.S)
-		marshal := marshaler.New(cacheManager)
-		ctx := context.Background()
-
-		_ = marshal.Invalidate(
-			ctx,
-			store.WithInvalidateTags([]string{
-				fmt.Sprintf("channel#%d", target.ID),
-				fmt.Sprintf("user#%d", user.ID),
-			}),
+		cachekit.DeleteByTags(
+			gap.Ca,
+			fmt.Sprintf("channel#%d", target.ID),
+			fmt.Sprintf("user#%d", user.ID),
 		)
 	}
 
@@ -101,16 +91,10 @@ func EditChannelMember(membership models.ChannelMember) (models.ChannelMember, e
 	if err := database.C.Save(&membership).Error; err != nil {
 		return membership, err
 	} else {
-		cacheManager := cache.New[any](localCache.S)
-		marshal := marshaler.New(cacheManager)
-		contx := context.Background()
-
-		_ = marshal.Invalidate(
-			contx,
-			store.WithInvalidateTags([]string{
-				fmt.Sprintf("channel#%d", membership.ChannelID),
-				fmt.Sprintf("user#%d", membership.AccountID),
-			}),
+		cachekit.DeleteByTags(
+			gap.Ca,
+			fmt.Sprintf("channel#%d", membership.ChannelID),
+			fmt.Sprintf("user#%d", membership.AccountID),
 		)
 	}
 
@@ -121,16 +105,10 @@ func RemoveChannelMember(member models.ChannelMember, target models.Channel) err
 	if err := database.C.Delete(&member).Error; err == nil {
 		database.C.Where("sender_id = ?").Delete(&models.Event{})
 
-		cacheManager := cache.New[any](localCache.S)
-		marshal := marshaler.New(cacheManager)
-		ctx := context.Background()
-
-		_ = marshal.Invalidate(
-			ctx,
-			store.WithInvalidateTags([]string{
-				fmt.Sprintf("channel#%d", target.ID),
-				fmt.Sprintf("user#%d", target.AccountID),
-			}),
+		cachekit.DeleteByTags(
+			gap.Ca,
+			fmt.Sprintf("channel#%d", target.ID),
+			fmt.Sprintf("user#%d", member.AccountID),
 		)
 
 		return nil
